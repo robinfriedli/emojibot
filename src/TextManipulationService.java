@@ -5,18 +5,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Transform given input
+ * wraps words in WhatsApp formatting wrappers if randFormat is true
+ * adds random emoji between words
+ * replaces keywords with emojis
+ */
 public class TextManipulationService {
 
     private final boolean randFormat;
     private final Multimap<String, String> emojiMap;
-    private final List<String> emojiValues;
 
     private static List<String> wrappers = new ArrayList<String>(Arrays.asList("_", "*", "~", "```")){};
 
-    public TextManipulationService(boolean randFormat, Multimap<String, String> emojiMap, List<String> emojiValues) {
+    public TextManipulationService(boolean randFormat, Multimap<String, String> emojiMap) {
         this.randFormat = randFormat;
         this.emojiMap = emojiMap;
-        this.emojiValues = emojiValues;
     }
 
 
@@ -30,7 +34,7 @@ public class TextManipulationService {
         replaceWords(words);
         if (randFormat) applyRandomFormat(words);
 
-        return replaceChars(String.join(" ", words));
+        return filterOutput(String.join(" ", words));
     }
 
     private void replaceWords(String[] words) {
@@ -39,6 +43,7 @@ public class TextManipulationService {
             if (emojiMap.containsKey(word)) {
                 StringBuilder wordBuilder = new StringBuilder();
                 wordBuilder.append(words[i]);
+                //the same keyword can be set on different emojis, add all of them
                 for (String emoji : emojiMap.get(word)) {
                     wordBuilder.append(emoji);
                 }
@@ -47,21 +52,21 @@ public class TextManipulationService {
         }
     }
 
-    private String replaceChars(String input) {
-        String[] letters = input.split("");
+    private String filterOutput(String input) {
+        String[] chars = input.split("");
 
-        for(int e = 0; e < letters.length; e++) {
-            if (letters[e].equalsIgnoreCase("b")) {
-                letters[e] = "\uD83C\uDD71️";
+        for(int e = 0; e < chars.length; e++) {
+            if (chars[e].equalsIgnoreCase("b")) {
+                chars[e] = "\uD83C\uDD71️";
             }
 
-            if (letters[e].equals(" ")) {
-                int rand = ThreadLocalRandom.current().nextInt(0, emojiValues.size());
-                letters[e] = " " + emojiValues.get(rand) + " ";
+            if (chars[e].equals(" ")) {
+                int rand = ThreadLocalRandom.current().nextInt(0, EmojiLoadingService.EMOJIS.size());
+                chars[e] = " " + EmojiLoadingService.EMOJIS.get(rand) + " ";
             }
         }
 
-        return String.join("", letters);
+        return String.join("", chars);
     }
 
     private void applyRandomFormat(String[] words) {

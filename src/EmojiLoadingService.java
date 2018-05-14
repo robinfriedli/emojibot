@@ -14,10 +14,20 @@ import java.util.List;
 
 public class EmojiLoadingService {
 
-    public static Multimap<String, String> loadKeywords() {
-        Document doc = getDocument();
+    public static final Document DOC = getDocument();
+    public static List<String> EMOJIS = Lists.newArrayList();
+
+    /**
+     * loops over all emoji elements in the xml file
+     * adds them to the EMOJIS field
+     * loads all of their keywords
+     * and puts them in a Multimap with the keywords as keys and emoji as value
+     *
+     * @return Multimap
+     */
+    public static Multimap<String, String> loadEmojis() {
         Multimap<String, String> emojiMap = HashMultimap.create();
-        NodeList emojiList = doc.getElementsByTagName("emoji");
+        NodeList emojiList = DOC.getElementsByTagName("emoji");
 
         for (int i = 0; i < emojiList.getLength(); i++) {
             Node emoji = emojiList.item(i);
@@ -25,6 +35,8 @@ public class EmojiLoadingService {
             if (emoji.getNodeType() == Node.ELEMENT_NODE) {
                 Element elem = (Element) emoji;
                 String emojiValue = elem.getAttribute("value");
+                EMOJIS.add(emojiValue);
+
                 for (String keyword : getKeywords(elem)) {
                     emojiMap.put(keyword, emojiValue);
                 }
@@ -47,7 +59,7 @@ public class EmojiLoadingService {
         return keywordList;
     }
 
-    public static Document getDocument() {
+    private static Document getDocument() {
         try {
             File xml = new File("./resources/emojis.xml");
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -59,13 +71,5 @@ public class EmojiLoadingService {
         }
 
         return null;
-    }
-
-    public static List<String> getEmojiStrings() {
-        List<String> emojis = Lists.newArrayList();
-
-        emojis.addAll(loadKeywords().values());
-
-        return emojis;
     }
 }

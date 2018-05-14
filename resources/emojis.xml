@@ -29,4 +29,27 @@
         <keyword>heart</keyword>
         <keyword>&lt;3</keyword>
     </emoji>
+    <emoji value="🔥">
+        <keyword>lit</keyword>
+        <keyword>fam</keyword>
+    </emoji>
+    <emoji value="🤷">
+        <keyword>tja</keyword>
+        <keyword>well</keyword>
+        <keyword>idk</keyword>
+        <keyword>¯\_(ツ)_/¯</keyword>
+    </emoji>
+    <emoji value="💩">
+        <keyword>sevi</keyword>
+        <keyword>severin</keyword>
+        <keyword>shit</keyword>
+        <keyword>trash</keyword>
+    </emoji>
+    <emoji value="🌚">
+        <keyword>sebi</keyword>
+    </emoji>
+    <emoji value="💁">
+        <keyword>dealwithit</keyword>
+    </emoji>
+    <emoji value="🙌"/>
 </emojis>
