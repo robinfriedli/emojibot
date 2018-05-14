@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="emojiSpace">
+
+    <xs:element name="emojis" type="emojiList"/>
+    <xs:complexType name="emojiList">
+        <xs:sequence>
+            <xs:element name="emoji" type="emoji"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="emoji" type="emoji"/>
+    <xs:complexType name="emoji">
+        <xs:sequence>
+            <xs:element name="keyword" type="xs:string"/>
+        </xs:sequence>
+        <xs:attribute name="value" type="xs:string" use="required"/>
+    </xs:complexType>
+
+</xs:schema>
