@@ -9,13 +9,11 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 public class EmojiLoadingService {
 
     public static final Document DOC = getDocument();
-    public static List<String> EMOJIS = Lists.newArrayList();
 
     /**
      * loops over all emoji elements in the xml file
@@ -25,9 +23,9 @@ public class EmojiLoadingService {
      *
      * @return Multimap
      */
-    public static Multimap<String, String> loadEmojis() {
-        Multimap<String, String> emojiMap = HashMultimap.create();
+    public static List<Emoji> loadEmojis() {
         NodeList emojiList = DOC.getElementsByTagName("emoji");
+        List<Emoji> emojis = Lists.newArrayList();
 
         for (int i = 0; i < emojiList.getLength(); i++) {
             Node emoji = emojiList.item(i);
@@ -35,25 +33,22 @@ public class EmojiLoadingService {
             if (emoji.getNodeType() == Node.ELEMENT_NODE) {
                 Element elem = (Element) emoji;
                 String emojiValue = elem.getAttribute("value");
-                EMOJIS.add(emojiValue);
-
-                for (String keyword : getKeywords(elem)) {
-                    emojiMap.put(keyword, emojiValue);
-                }
-
+                emojis.add(new Emoji(getKeywords(elem), emojiValue));
             }
         }
 
-        return emojiMap;
+        return emojis;
     }
 
-    private static List<String> getKeywords(Element elem) {
-        List<String> keywordList = new ArrayList<>();
+    private static List<Keyword> getKeywords(Element elem) {
+        List<Keyword> keywordList = Lists.newArrayList();
 
         NodeList keywords = elem.getElementsByTagName("keyword");
         for(int e = 0; e < keywords.getLength(); e++) {
             Element keyElem = (Element) keywords.item(e);
-            keywordList.add(keyElem.getTextContent());
+            String keyword = keyElem.getTextContent();
+            boolean replace = Boolean.parseBoolean(keyElem.getAttribute("replace"));
+            keywordList.add(new Keyword(keyword, replace));
         }
 
         return keywordList;

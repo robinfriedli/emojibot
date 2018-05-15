@@ -14,13 +14,13 @@ import java.util.concurrent.ThreadLocalRandom;
 public class TextManipulationService {
 
     private final boolean randFormat;
-    private final Multimap<String, String> emojiMap;
+    private final List<Emoji> emojis;
 
     private static List<String> wrappers = new ArrayList<String>(Arrays.asList("_", "*", "~", "```")){};
 
-    public TextManipulationService(boolean randFormat, Multimap<String, String> emojiMap) {
+    public TextManipulationService(boolean randFormat, List<Emoji> emojis) {
         this.randFormat = randFormat;
-        this.emojiMap = emojiMap;
+        this.emojis = emojis;
     }
 
 
@@ -38,18 +38,32 @@ public class TextManipulationService {
     }
 
     private void replaceWords(String[] words) {
+        List<Keyword> keywords = Emoji.getAllKeywords(emojis);
+        List<String> keywordValues = Keyword.getAllKeywordValues(keywords);
+
         for (int i = 0; i < words.length; i++) {
             String word = words[i].toLowerCase();
-            if (emojiMap.containsKey(word)) {
+            if (keywordValues.contains(word)) {
                 StringBuilder wordBuilder = new StringBuilder();
-                wordBuilder.append(words[i]);
-                //the same keyword can be set on different emojis, add all of them
-                for (String emoji : emojiMap.get(word)) {
-                    wordBuilder.append(emoji);
+                List<Keyword> selectedKeywords = Keyword.getSelectedKeywords(keywords, word);
+                List<Emoji> selectedEmojis = Emoji.loadFromKeyword(selectedKeywords, emojis);
+
+                if(!isReplace(selectedKeywords)) {
+                    wordBuilder.append(words[i]);
                 }
+
+                for (Emoji emoji : selectedEmojis) {
+                    wordBuilder.append(emoji.getEmojiValue());
+                }
+
                 words[i] = wordBuilder.toString();
             }
         }
+    }
+
+    //allMatch: replace if all Keywords true, anyMath: replace if one true
+    private boolean isReplace(List<Keyword> keywords) {
+        return keywords.stream().allMatch(Keyword::isReplace);
     }
 
     private String filterOutput(String input) {
@@ -61,8 +75,8 @@ public class TextManipulationService {
             }
 
             if (chars[e].equals(" ")) {
-                int rand = ThreadLocalRandom.current().nextInt(0, EmojiLoadingService.EMOJIS.size());
-                chars[e] = " " + EmojiLoadingService.EMOJIS.get(rand) + " ";
+                int rand = ThreadLocalRandom.current().nextInt(0, emojis.size());
+                chars[e] = " " + emojis.get(rand).getEmojiValue() + " ";
             }
         }
 

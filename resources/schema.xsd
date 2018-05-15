@@ -11,9 +11,12 @@
     <xs:element name="emoji" type="emoji"/>
     <xs:complexType name="emoji">
         <xs:sequence>
-            <xs:element name="keyword" type="xs:string"/>
+            <xs:element name="keyword" type="keyword"/>
         </xs:sequence>
         <xs:attribute name="value" type="xs:string" use="required"/>
     </xs:complexType>
 
+    <xs:complexType name="keyword">
+        <xs:attribute name="replace" type="xs:boolean" use="required"/>
+    </xs:complexType>
 </xs:schema>

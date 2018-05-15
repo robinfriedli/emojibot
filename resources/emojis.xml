@@ -1,55 +1,79 @@
 <?xml version="1.0"?>
 <emojis xmlns="emojiSpace">
     <emoji value="🌈">
-        <keyword>sevi</keyword>
-        <keyword>severin</keyword>
-        <keyword>gay</keyword>
+        <keyword replace="false">sevi</keyword>
+        <keyword replace="false">severin</keyword>
+        <keyword replace="false">gay</keyword>
     </emoji>
     <emoji value="😂">
-        <keyword>lol</keyword>
+        <keyword replace="true">lol</keyword>
     </emoji>
     <emoji value="😎">
-        <keyword>cool</keyword>
-        <keyword>dealwithit</keyword>
+        <keyword replace="false">cool</keyword>
+        <keyword replace="true">dealwithit</keyword>
     </emoji>
     <emoji value="🤔">
-        <keyword>thinking</keyword>
-        <keyword>thonking</keyword>
-        <keyword>hmmm</keyword>
+        <keyword replace="false">thinking</keyword>
+        <keyword replace="false">thonking</keyword>
+        <keyword replace="true">hmmm</keyword>
     </emoji>
     <emoji value="😤">
-        <keyword>smh</keyword>
-        <keyword>steaming</keyword>
+        <keyword replace="false">smh</keyword>
+        <keyword replace="true">steaming</keyword>
     </emoji>
     <emoji value="👨‍❤️‍👨">
-        <keyword>gay</keyword>
+        <keyword replace="false">gay</keyword>
     </emoji>
     <emoji value="❤️">
-        <keyword>robin</keyword>
-        <keyword>heart</keyword>
-        <keyword>&lt;3</keyword>
+        <keyword replace="false">robin</keyword>
+        <keyword replace="true">heart</keyword>
+        <keyword replace="true">&lt;3</keyword>
     </emoji>
     <emoji value="🔥">
-        <keyword>lit</keyword>
-        <keyword>fam</keyword>
+        <keyword replace="false">lit</keyword>
+        <keyword replace="false">fam</keyword>
     </emoji>
     <emoji value="🤷">
-        <keyword>tja</keyword>
-        <keyword>well</keyword>
-        <keyword>idk</keyword>
-        <keyword>¯\_(ツ)_/¯</keyword>
+        <keyword replace="true">tja</keyword>
+        <keyword replace="true">well</keyword>
+        <keyword replace="false">idk</keyword>
+        <keyword replace="true">¯\_(ツ)_/¯</keyword>
     </emoji>
     <emoji value="💩">
-        <keyword>sevi</keyword>
-        <keyword>severin</keyword>
-        <keyword>shit</keyword>
-        <keyword>trash</keyword>
+        <keyword replace="false">sevi</keyword>
+        <keyword replace="false">severin</keyword>
+        <keyword replace="true">shit</keyword>
+        <keyword replace="false">trash</keyword>
     </emoji>
     <emoji value="🌚">
-        <keyword>sebi</keyword>
+        <keyword replace="false">sebi</keyword>
     </emoji>
     <emoji value="💁">
-        <keyword>dealwithit</keyword>
+        <keyword replace="true">dealwithit</keyword>
     </emoji>
     <emoji value="🙌"/>
+    <emoji value="🤦"/>
+    <emoji value="😫"/>
+    <emoji value="😒"/>
+    <emoji value="😢"/>
+    <emoji value="😩"/>
+    <emoji value="🤧">
+        <keyword replace="false">gruppe</keyword>
+    </emoji>
+    <emoji value="🤳"/>
+    <emoji value="👈"/>
+    <emoji value="👉"/>
+    <emoji value="👌">
+        <keyword replace="false">ok</keyword>
+    </emoji>
+    <emoji value="👍">
+        <keyword replace="false">guet</keyword>
+        <keyword replace="false">good</keyword>
+        <keyword replace="false">great</keyword>
+    </emoji>
+    <emoji value="👎">
+        <keyword replace="false">bad</keyword>
+        <keyword replace="false">shit</keyword>
+        <keyword replace="false">schlecht</keyword>
+    </emoji>
 </emojis>
