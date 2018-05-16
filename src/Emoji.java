@@ -1,5 +1,4 @@
-import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
 import java.util.List;
 
 public class Emoji {
@@ -18,7 +17,7 @@ public class Emoji {
 
     public Keyword getKeyword(String value) {
         for (Keyword keyword : keywords) {
-            if(keyword.getKeywordValue().equals(value)) {
+            if (keyword.getKeywordValue().equals(value)) {
                 return keyword;
             }
         }
@@ -39,18 +38,18 @@ public class Emoji {
     }
 
     public static List<Keyword> getAllKeywords(List<Emoji> emojis) {
-        List<Keyword> keywords = Lists.newArrayList();
-        for (Emoji emoji: emojis) {
+        List<Keyword> keywords = new ArrayList<>();
+        for (Emoji emoji : emojis) {
             keywords.addAll(emoji.getKeywords());
         }
         return keywords;
     }
 
     public static List<Emoji> loadFromKeyword(List<Keyword> keywords, List<Emoji> emojis) {
-        List<Emoji> selectedEmojis = Lists.newArrayList();
+        List<Emoji> selectedEmojis = new ArrayList<>();
         for (Emoji emoji : emojis) {
             List<Keyword> keywordsForEmoji = emoji.getKeywords();
-            for(Keyword keyword : keywordsForEmoji) {
+            for (Keyword keyword : keywordsForEmoji) {
                 if (keywords.contains(keyword)) {
                     selectedEmojis.add(emoji);
                 }

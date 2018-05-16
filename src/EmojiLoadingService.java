@@ -1,6 +1,3 @@
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -9,6 +6,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class EmojiLoadingService {
@@ -17,15 +15,14 @@ public class EmojiLoadingService {
 
     /**
      * loops over all emoji elements in the xml file
-     * adds them to the EMOJIS field
-     * loads all of their keywords
-     * and puts them in a Multimap with the keywords as keys and emoji as value
+     * creates Emoji object with all of its keywords
+     * adds Emojis to list
      *
      * @return Multimap
      */
     public static List<Emoji> loadEmojis() {
         NodeList emojiList = DOC.getElementsByTagName("emoji");
-        List<Emoji> emojis = Lists.newArrayList();
+        List<Emoji> emojis = new ArrayList<>();
 
         for (int i = 0; i < emojiList.getLength(); i++) {
             Node emoji = emojiList.item(i);
@@ -41,10 +38,10 @@ public class EmojiLoadingService {
     }
 
     private static List<Keyword> getKeywords(Element elem) {
-        List<Keyword> keywordList = Lists.newArrayList();
+        List<Keyword> keywordList = new ArrayList<>();
 
         NodeList keywords = elem.getElementsByTagName("keyword");
-        for(int e = 0; e < keywords.getLength(); e++) {
+        for (int e = 0; e < keywords.getLength(); e++) {
             Element keyElem = (Element) keywords.item(e);
             String keyword = keyElem.getTextContent();
             boolean replace = Boolean.parseBoolean(keyElem.getAttribute("replace"));

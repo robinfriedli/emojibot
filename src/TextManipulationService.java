@@ -1,5 +1,3 @@
-import com.google.common.collect.Multimap;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,7 +7,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * Transform given input
  * wraps words in WhatsApp formatting wrappers if randFormat is true
  * adds random emoji between words
- * replaces keywords with emojis
+ * replaces keywords with emojis if replace is true else adds emoji after word
  */
 public class TextManipulationService {
 
