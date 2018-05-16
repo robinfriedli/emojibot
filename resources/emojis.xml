@@ -51,7 +51,10 @@
     <emoji value="💁">
         <keyword replace="true">dealwithit</keyword>
     </emoji>
-    <emoji value="🙌"/>
+    <emoji value="🙌">
+        <keyword replace="false">bless</keyword>
+        <keyword replace="false">blessed</keyword>
+    </emoji>
     <emoji value="🤦"/>
     <emoji value="😫"/>
     <emoji value="😒"/>
@@ -76,4 +79,23 @@
         <keyword replace="false">shit</keyword>
         <keyword replace="false">schlecht</keyword>
     </emoji>
+    <emoji value="🤠"/>
+    <emoji value="🕺"/>
+    <emoji value="💪"/>
+    <emoji value="👊"/>
+    <emoji value="👏">
+        <keyword replace="false">wow</keyword>
+        <keyword replace="false">good</keyword>
+        <keyword replace="false">gj</keyword>
+    </emoji>
+    <emoji value="💦">
+        <keyword replace="false">jizz</keyword>
+    </emoji>
+    <emoji value="🙈"/>
+    <emoji value="🙉"/>
+    <emoji value="🙊"/>
+    <emoji value="🐐">
+        <keyword replace="false">goat</keyword>
+    </emoji>
+    <emoji value="🍆"/>
 </emojis>
