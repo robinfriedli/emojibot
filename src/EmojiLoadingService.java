@@ -51,7 +51,7 @@ public class EmojiLoadingService {
         List<String> keywordList = new ArrayList<>();
 
         NodeList keywords = elem.getElementsByTagName("keyword");
-        for(int e = 0; e < keywords.getLength(); e++) {
+        for (int e = 0; e < keywords.getLength(); e++) {
             Element keyElem = (Element) keywords.item(e);
             keywordList.add(keyElem.getTextContent());
         }
