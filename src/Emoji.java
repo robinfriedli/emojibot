@@ -57,4 +57,18 @@ public class Emoji {
         }
         return selectedEmojis;
     }
+
+    public static List<Emoji> loadFromKeyword(Keyword keyword, List<Emoji> emojis) {
+        List<Emoji> selectedEmojis = new ArrayList<>();
+        for (Emoji emoji : emojis) {
+            List<Keyword> keywordsForEmoji = emoji.getKeywords();
+            for (Keyword keywordForEmoji : keywordsForEmoji) {
+                if (keywordForEmoji.getKeywordValue().equals(keyword.getKeywordValue())) {
+                    selectedEmojis.add(emoji);
+                }
+            }
+        }
+        return selectedEmojis;
+    }
+
 }

@@ -11,6 +11,7 @@
     <emoji value="😎">
         <keyword replace="false">cool</keyword>
         <keyword replace="true">dealwithit</keyword>
+        <keyword replace="true">deal with it</keyword>
     </emoji>
     <emoji value="🤔">
         <keyword replace="false">thinking</keyword>
@@ -50,24 +51,28 @@
     </emoji>
     <emoji value="💁">
         <keyword replace="true">dealwithit</keyword>
+        <keyword replace="true">deal with it</keyword>
     </emoji>
     <emoji value="🙌">
         <keyword replace="false">bless</keyword>
         <keyword replace="false">blessed</keyword>
     </emoji>
-    <emoji value="🤦"/>
+    <emoji value="🤦">
+        <keyword replace="false">dumbass</keyword>
+    </emoji>
     <emoji value="😫"/>
     <emoji value="😒"/>
     <emoji value="😢"/>
     <emoji value="😩"/>
     <emoji value="🤧">
-        <keyword replace="false">gruppe</keyword>
+        <keyword replace="false">eine kleine gruppe</keyword>
     </emoji>
     <emoji value="🤳"/>
     <emoji value="👈"/>
     <emoji value="👉"/>
     <emoji value="👌">
         <keyword replace="false">ok</keyword>
+        <keyword replace="false">good shit</keyword>
     </emoji>
     <emoji value="👍">
         <keyword replace="false">guet</keyword>
