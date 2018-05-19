@@ -61,30 +61,31 @@ public class TextManipulationService {
         return input;
     }
 
-    private String replaceKeyword(boolean replace, String input, String keywordValue, Keyword keyword) {
+    private String replaceKeyword(boolean replace, String input, String word, Keyword keyword) {
         StringBuilder builder = new StringBuilder();
-        List<Integer> occurrences = findOccurrences(input, keywordValue);
+        //if replace is false the word might not be lower case since the word gets loaded from the input so that capitalisation is not lost
+        List<Integer> occurrences = findOccurrences(input, word.toLowerCase());
 
         //append input string up until the first keyword
         builder.append(input, 0, occurrences.get(0));
         for (int i = 0; i < occurrences.size(); i++) {
             //check if the keyword is part of a word
-            if (isFullWord(input, occurrences.get(i), occurrences.get(i) + keywordValue.length())) {
+            if (isFullWord(input, occurrences.get(i), occurrences.get(i) + word.length())) {
                 if (replace) {
                     builder.append(getEmojiString(keyword));
                 } else {
-                    builder.append(keywordValue).append(getEmojiString(keyword));
+                    builder.append(word).append(getEmojiString(keyword));
                 }
             } else {
-                builder.append(keywordValue);
+                builder.append(word);
             }
             //append input string up until next keyword if not the last keyword
             if (i < occurrences.size() - 1) {
-                builder.append(input, occurrences.get(i) + keywordValue.length(), occurrences.get(i + 1));
+                builder.append(input, occurrences.get(i) + word.length(), occurrences.get(i + 1));
             }
         }
         //append input string from last keyword
-        builder.append(input, occurrences.get(occurrences.size() - 1) + keywordValue.length(), input.length());
+        builder.append(input, occurrences.get(occurrences.size() - 1) + word.length(), input.length());
 
         return builder.toString();
     }
