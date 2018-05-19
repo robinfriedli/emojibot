@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Pattern;
 
 /**
  * Transform given input
@@ -15,7 +16,7 @@ public class TextManipulationService {
     private final List<Emoji> emojis;
     private final List<Keyword> keywords;
 
-    private static List<String> wrappers = new ArrayList<String>(Arrays.asList("_", "*", "~", "```")){};
+    private static List<String> wrappers = new ArrayList<>(Arrays.asList("_", "*", "~", "```"));
 
     public TextManipulationService(boolean randFormat, List<Emoji> emojis) {
         this.randFormat = randFormat;
@@ -47,11 +48,10 @@ public class TextManipulationService {
             if (!handledKeywords.contains(keywordValue) && input.toLowerCase().contains(keywordValue)) {
                 //check if all Keywords of that value are isReplace
                 if (Keyword.getSelectedKeywords(keywords, keywordValue).stream().allMatch(Keyword::isReplace)) {
-                    // (?i) means ignore case
-                    input = input.replaceAll("(?i)" + keywordValue, getEmojiString(keyword));
+                    input = replaceKeyword(true, input, keywordValue, keyword);
                 } else {
                     for (String word : loadDifferentWords(input, keywordValue)) {
-                        input = input.replaceAll(word, word + getEmojiString(keyword));
+                        input = replaceKeyword(false, input, word, keyword);
                     }
                 }
                 handledKeywords.add(keywordValue);
@@ -59,6 +59,40 @@ public class TextManipulationService {
         }
 
         return input;
+    }
+
+    private String replaceKeyword(boolean replace, String input, String keywordValue, Keyword keyword) {
+        StringBuilder builder = new StringBuilder();
+        List<Integer> occurrences = findOccurrences(input, keywordValue);
+
+        //append input string up until the first keyword
+        builder.append(input, 0, occurrences.get(0));
+        for (int i = 0; i < occurrences.size(); i++) {
+            //check if the keyword is part of a word
+            if (isFullWord(input, occurrences.get(i), occurrences.get(i) + keywordValue.length())) {
+                if (replace) {
+                    builder.append(getEmojiString(keyword));
+                } else {
+                    builder.append(keywordValue).append(getEmojiString(keyword));
+                }
+            } else {
+                builder.append(keywordValue);
+            }
+            //append input string up until next keyword if not the last keyword
+            if (i < occurrences.size() - 1) {
+                builder.append(input, occurrences.get(i) + keywordValue.length(), occurrences.get(i + 1));
+            }
+        }
+        //append input string from last keyword
+        builder.append(input, occurrences.get(occurrences.size() - 1) + keywordValue.length(), input.length());
+
+        return builder.toString();
+    }
+
+    private boolean isFullWord(String input, int start, int end) {
+        Pattern letters = Pattern.compile("[A-Za-zÀ-ÿ]");
+        return (start == 0 || !letters.matcher(Character.toString(input.charAt(start - 1))).matches())
+                && (end == input.length() || !letters.matcher(Character.toString(input.charAt(end))).matches());
     }
 
     /**
@@ -71,11 +105,11 @@ public class TextManipulationService {
      * @return words
      */
     private List<String> loadDifferentWords(String input, String keywordValue) {
-        List<Integer> wordPostitions = findOccurrences(input, keywordValue);
+        List<Integer> wordPositions = findOccurrences(input, keywordValue);
         List<String> words = new ArrayList<>();
-        for (int wordPosition : wordPostitions) {
+        for (int wordPosition : wordPositions) {
             String word = (String) input.subSequence(wordPosition, wordPosition + keywordValue.length());
-            if (!words.contains(word)) {
+            if (!words.contains(word) && isFullWord(input, wordPosition, wordPosition + word.length())) {
                 words.add(word);
             }
         }
