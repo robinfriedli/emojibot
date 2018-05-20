@@ -50,9 +50,7 @@ public class TextManipulationService {
                 if (Keyword.getSelectedKeywords(keywords, keywordValue).stream().allMatch(Keyword::isReplace)) {
                     input = replaceKeyword(true, input, keywordValue, keyword);
                 } else {
-                    for (String word : loadDifferentWords(input, keywordValue)) {
-                        input = replaceKeyword(false, input, word, keyword);
-                    }
+                    input = replaceKeyword(false, input, keywordValue, keyword);
                 }
                 handledKeywords.add(keywordValue);
             }
@@ -61,16 +59,17 @@ public class TextManipulationService {
         return input;
     }
 
-    private String replaceKeyword(boolean replace, String input, String word, Keyword keyword) {
+    private String replaceKeyword(boolean replace, String input, String keywordValue, Keyword keyword) {
         StringBuilder builder = new StringBuilder();
-        //if replace is false the word might not be lower case since the word gets loaded from the input so that capitalisation is not lost
-        List<Integer> occurrences = findOccurrences(input, word.toLowerCase());
+        List<Integer> occurrences = findOccurrences(input, keywordValue);
 
         //append input string up until the first keyword
         builder.append(input, 0, occurrences.get(0));
         for (int i = 0; i < occurrences.size(); i++) {
+            //load exact word from input string so that capitalisation is not lost
+            String word = (String) input.subSequence(occurrences.get(i), occurrences.get(i) + keywordValue.length());
             //check if the keyword is part of a word
-            if (isFullWord(input, occurrences.get(i), occurrences.get(i) + word.length())) {
+            if (isFullWord(input, occurrences.get(i), occurrences.get(i) + keywordValue.length())) {
                 if (replace) {
                     builder.append(getEmojiString(keyword));
                 } else {
@@ -81,11 +80,11 @@ public class TextManipulationService {
             }
             //append input string up until next keyword if not the last keyword
             if (i < occurrences.size() - 1) {
-                builder.append(input, occurrences.get(i) + word.length(), occurrences.get(i + 1));
+                builder.append(input, occurrences.get(i) + keywordValue.length(), occurrences.get(i + 1));
             }
         }
         //append input string from last keyword
-        builder.append(input, occurrences.get(occurrences.size() - 1) + word.length(), input.length());
+        builder.append(input, occurrences.get(occurrences.size() - 1) + keywordValue.length(), input.length());
 
         return builder.toString();
     }
@@ -97,31 +96,8 @@ public class TextManipulationService {
     }
 
     /**
-     * Load different words from input matching keyword
-     * Since they match the keyword they only differ in capitalisation
-     * For in case the same keyword exist several times with different capitalisation
-     *
-     * @param input
-     * @param keywordValue
-     * @return words
-     */
-    private List<String> loadDifferentWords(String input, String keywordValue) {
-        List<Integer> wordPositions = findOccurrences(input, keywordValue);
-        List<String> words = new ArrayList<>();
-        for (int wordPosition : wordPositions) {
-            String word = (String) input.subSequence(wordPosition, wordPosition + keywordValue.length());
-            if (!words.contains(word) && isFullWord(input, wordPosition, wordPosition + word.length())) {
-                words.add(word);
-            }
-        }
-
-        return words;
-    }
-
-    /**
-     * Find exactly where in the input string the keyword occurs for when I want to load the exact word from input
-     * This is used when replace is false and the word should be written along with the emoji.
-     * Instead of just writing the keyword value I load the word from the actual input so that capitalisation isn't lost
+     * Find where the keyword appears in the input string so the exact word can be loaded and capitalisation is not lost
+     * when replacing
      *
      * @param input
      * @param keyword
