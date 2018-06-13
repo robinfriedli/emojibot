@@ -6,28 +6,13 @@ Adds emojis to text.
 
 ____________________________________________________________________________________________________________________
 
-Transform text into emojitext:
+Transform text into emojitext: e!e text
 
-    Syntax:
-    e!e text
+List all saved emojis: e!list
 
-List all saved emojis:
+Search for saved emojis and keywords: e!search "searchTerm"
 
-    Syntax:
-    e!list
-
-Search for saved emojis and keywords:
-
-    Syntax:
-    e!search "searchTerm"
-
-    Notice:
-    Shows found emoji and lists its keyword or shown found keyword and lists what emojis it occurs on
-
-Add emojis:
-
-    Syntax:
-    e!add "emoji1, emoji2"
+Add emojis: e!add "emoji1, emoji2"
 
 Add emojis with keywords or adjust replace flag of existing keywords:
 
@@ -41,15 +26,9 @@ Add emojis with keywords or adjust replace flag of existing keywords:
     All keywords will be applied to all emojis.
     Keywords MUST be lower case.
 
-Remove emojis:
+Remove emojis: e!rm "emoji1, emoji2"
 
-    Syntax:
-    e!rm "emoji1, emoji2"
-
-Remove keywords:
-
-    Syntax:
-    e!rm "emoji1, emoji2" "keyword1, keyword2"
+Remove keywords: e!rm "emoji1, emoji2" "keyword1, keyword2"
 
     Notice:
     Specify the emojis from which you want to remove the keywords.

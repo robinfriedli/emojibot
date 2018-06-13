@@ -152,11 +152,13 @@ public class DiscordListener extends ListenerAdapter {
             String[] replaceTagList = replaceTags.split(", ");
 
             if (Arrays.stream(replaceTagList).allMatch(s -> s.equals("true") || s.equals("false"))
-                    && keywordList.length == replaceTagList.length) {
+                    && keywordList.length == replaceTagList.length
+                    && Arrays.stream(keywordList).allMatch(k -> k.equals(k.toLowerCase()))) {
                 emojiAddingService.addEmojis(emojiList, keywordList, replaceTagList);
             } else {
-                channel.sendMessage("There has to be one replace flag for each keyword. " +
-                        "Replace tag has to be either 'true' or 'false'" +
+                channel.sendMessage("There has to be one replace flag for each keyword" +
+                        "\nReplace tag has to be either 'true' or 'false'" +
+                        "\nKeywords have to be lower case" +
                         "\nSee 'e!help'").queue();
             }
         } else {
