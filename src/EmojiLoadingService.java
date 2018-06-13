@@ -11,8 +11,6 @@ import java.util.List;
 
 public class EmojiLoadingService {
 
-    public static final Document DOC = getDocument();
-
     /**
      * loops over all emoji elements in the xml file
      * creates Emoji object with all of its keywords
@@ -20,8 +18,9 @@ public class EmojiLoadingService {
      *
      * @return Multimap
      */
-    public static List<Emoji> loadEmojis() {
-        NodeList emojiList = DOC.getElementsByTagName("emoji");
+    public List<Emoji> loadEmojis() {
+        Document doc = getDocument();
+        NodeList emojiList = doc.getElementsByTagName("emoji");
         List<Emoji> emojis = new ArrayList<>();
 
         for (int i = 0; i < emojiList.getLength(); i++) {
@@ -37,7 +36,7 @@ public class EmojiLoadingService {
         return emojis;
     }
 
-    private static List<Keyword> getKeywords(Element elem) {
+    private List<Keyword> getKeywords(Element elem) {
         List<Keyword> keywordList = new ArrayList<>();
 
         NodeList keywords = elem.getElementsByTagName("keyword");
@@ -51,7 +50,7 @@ public class EmojiLoadingService {
         return keywordList;
     }
 
-    private static Document getDocument() {
+    public Document getDocument() {
         try {
             File xml = new File("./resources/emojis.xml");
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
