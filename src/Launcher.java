@@ -3,7 +3,8 @@ import java.util.Scanner;
 public class Launcher {
 
     public static void main(String[] args) {
-        if (EmojiLoadingService.DOC != null) {
+        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
+        if (emojiLoadingService.getDocument() != null) {
             boolean randFormat;
 
             System.out.println("Should the text be randomly formatted italic / bold etc (WhatsApp)? y/n");
@@ -24,7 +25,7 @@ public class Launcher {
 
             }
 
-            TextManipulationService service = new TextManipulationService(randFormat, EmojiLoadingService.loadEmojis());
+            TextManipulationService service = new TextManipulationService(randFormat, emojiLoadingService.loadEmojis());
             Scanner inputSc = new Scanner(System.in);
             String output = service.getOutput(inputSc.nextLine());
             System.out.println(output);
