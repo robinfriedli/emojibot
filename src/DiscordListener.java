@@ -27,33 +27,33 @@ public class DiscordListener extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (!event.getAuthor().isBot()) {
+        if (event.getMessage().getContentDisplay().startsWith("e!") && !event.getAuthor().isBot()) {
             Message message = event.getMessage();
             String msg = message.getContentDisplay();
 
-            if (msg.startsWith("!e")) {
+            if (msg.startsWith("e!e")) {
                 transformText(event, message, msg);
             }
 
-            if (msg.startsWith("+e")) {
+            if (msg.startsWith("e!add")) {
                 saveEmojis(message, msg);
             }
 
-            if (msg.startsWith("-e")) {
+            if (msg.startsWith("e!rm")) {
                 deleteEmojis(message, msg);
             }
 
             //displays help.txt file
-            if (msg.equals("?e")) {
+            if (msg.equals("e!help")) {
                 MessageChannel channel = message.getChannel();
                 channel.sendMessage(TextLoadingService.loadHelp()).queue();
             }
 
-            if (msg.equals("$e")) {
+            if (msg.equals("e!list")) {
                 listEmojis(message);
             }
 
-            if (msg.startsWith("%e")) {
+            if (msg.startsWith("e!search")) {
                 searchQuery(message, msg);
             }
 
@@ -112,7 +112,7 @@ public class DiscordListener extends ListenerAdapter {
                     .append(service.getOutput(input));
             channel.sendMessage(response.toString()).queue();
         } catch (IndexOutOfBoundsException e) {
-            channel.sendMessage("Invalid input. See '?e'").queue();
+            channel.sendMessage("Invalid input. See 'e!help'").queue();
         }
     }
 
@@ -154,10 +154,10 @@ public class DiscordListener extends ListenerAdapter {
             } else {
                 channel.sendMessage("There has to be one replace flag for each keyword. " +
                         "Replace tag has to be either 'true' or 'false'" +
-                        "\nSee '?e'").queue();
+                        "\nSee 'e!help'").queue();
             }
         } else {
-            channel.sendMessage("Invalid input. See '?e'").queue();
+            channel.sendMessage("Invalid input. See 'e!help'").queue();
         }
     }
 
@@ -186,7 +186,7 @@ public class DiscordListener extends ListenerAdapter {
 
             emojiAddingService.removeKeywords(Arrays.asList(emojiList), Arrays.asList(keywordList));
         } else {
-            channel.sendMessage("Invalid input. See '?e'").queue();
+            channel.sendMessage("Invalid input. See 'e!help'").queue();
         }
     }
 
