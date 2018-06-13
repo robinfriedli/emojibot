@@ -104,8 +104,10 @@ public class DiscordListener extends ListenerAdapter {
             e.printStackTrace();
         }*/
 
-        if (event.isFromType(ChannelType.TEXT)) {
+        try {
             message.delete().queue();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
         }
 
         String input = msg.substring(COMMAND_TRANSFORM.length() + 1, msg.length());
