@@ -14,6 +14,13 @@ import java.util.Optional;
 
 public class DiscordListener extends ListenerAdapter {
 
+    private static final String COMMAND_TRANSFORM = "e!e";
+    private static final String COMMAND_ADD = "e!add";
+    private static final String COMMAND_RM = "e!rm";
+    private static final String COMMAND_HELP = "e!help";
+    private static final String COMMAND_LIST = "e!list";
+    private static final String COMMAND_SEARCH = "e!search";
+
     public static void main(String[] args) {
         try {
             new JDABuilder(AccountType.BOT)
@@ -31,29 +38,29 @@ public class DiscordListener extends ListenerAdapter {
             Message message = event.getMessage();
             String msg = message.getContentDisplay();
 
-            if (msg.startsWith("e!e")) {
+            if (msg.startsWith(COMMAND_TRANSFORM)) {
                 transformText(event, message, msg);
             }
 
-            if (msg.startsWith("e!add")) {
+            if (msg.startsWith(COMMAND_ADD)) {
                 saveEmojis(message, msg);
             }
 
-            if (msg.startsWith("e!rm")) {
+            if (msg.startsWith(COMMAND_RM)) {
                 deleteEmojis(message, msg);
             }
 
             //displays help.txt file
-            if (msg.equals("e!help")) {
+            if (msg.equals(COMMAND_HELP)) {
                 MessageChannel channel = message.getChannel();
                 channel.sendMessage(TextLoadingService.loadHelp()).queue();
             }
 
-            if (msg.equals("e!list")) {
+            if (msg.equals(COMMAND_LIST)) {
                 listEmojis(message);
             }
 
-            if (msg.startsWith("e!search")) {
+            if (msg.startsWith(COMMAND_SEARCH)) {
                 searchQuery(message, msg);
             }
 
@@ -101,19 +108,15 @@ public class DiscordListener extends ListenerAdapter {
             message.delete().queue();
         }
 
-        try {
-            String input = msg.substring(msg.indexOf("\"") + 1, msg.lastIndexOf("\""));
-            StringBuilder response = new StringBuilder();
+        String input = msg.substring(COMMAND_TRANSFORM.length() + 1, msg.length());
+        StringBuilder response = new StringBuilder();
 
-            EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-            TextManipulationService service = new TextManipulationService(false, emojiLoadingService.loadEmojis());
+        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
+        TextManipulationService service = new TextManipulationService(false, emojiLoadingService.loadEmojis());
 
-            response.append(message.getAuthor().getName()).append(":").append(System.lineSeparator())
-                    .append(service.getOutput(input));
-            channel.sendMessage(response.toString()).queue();
-        } catch (IndexOutOfBoundsException e) {
-            channel.sendMessage("Invalid input. See 'e!help'").queue();
-        }
+        response.append(message.getAuthor().getName()).append(":").append(System.lineSeparator())
+                .append(service.getOutput(input));
+        channel.sendMessage(response.toString()).queue();
     }
 
     /**

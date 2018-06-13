@@ -15,7 +15,7 @@ Commands:
 Transform text into emojitext:
 
     Syntax:
-    e!e "text"
+    e!e text
 
 List all saved emojis:
 
