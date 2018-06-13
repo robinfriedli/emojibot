@@ -114,7 +114,7 @@ public class DiscordListener extends ListenerAdapter {
         EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
         TextManipulationService service = new TextManipulationService(false, emojiLoadingService.loadEmojis());
 
-        response.append(message.getAuthor().getName()).append(":").append(System.lineSeparator())
+        response.append("**").append(message.getAuthor().getName()).append(":").append("**").append(System.lineSeparator())
                 .append(service.getOutput(input));
         channel.sendMessage(response.toString()).queue();
     }
