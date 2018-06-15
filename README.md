@@ -10,19 +10,19 @@ Uses the Java Discord API: https://github.com/DV8FromTheWorld/JDA
 
 ____________________________________________________________________________________________________________________
 
-##Commands:
+## Commands:
 
-###Transform text into emojitext:
+### Transform text into emojitext:
 
     Syntax:
     `e!e text`
 
-###List all saved emojis:
+### List all saved emojis:
 
     Syntax:
     `e!list`
 
-###Search for saved emojis and keywords:
+### Search for saved emojis and keywords:
 
     Syntax:
     `e!search "searchTerm"`
@@ -30,12 +30,12 @@ ________________________________________________________________________________
     Notice:
     Shows found emoji and lists its keyword or shown found keyword and lists what emojis it occurs on
 
-###Add emojis:
+### Add emojis:
 
     Syntax:
     `e!add "emoji1, emoji2"`
 
-###Add emojis with keywords or adjust replace flag of existing keywords:
+### Add emojis with keywords or adjust replace flag of existing keywords:
 
     Syntax:
     `e!add "emioji1, emoji2" "keyword1, keyword2" "true, false"`
@@ -47,12 +47,12 @@ ________________________________________________________________________________
     All keywords will be applied to all emojis.
     Keywords MUST be lower case.
 
-###Remove emojis:
+### Remove emojis:
 
     Syntax:
     `e!rm "emoji1, emoji2"`
 
-###Remove keywords:
+### Remove keywords:
 
     Syntax:
     `e!rm "emoji1, emoji2" "keyword1, keyword2"`
@@ -60,7 +60,7 @@ ________________________________________________________________________________
     Notice:
     Specify the emojis from which you want to remove the keywords.
 
-###Merge duplicate emojis and duplicate keywords on the same emoji:
+### Merge duplicate emojis and duplicate keywords on the same emoji:
 
     Syntax:
     `e!clean`
@@ -71,7 +71,7 @@ ________________________________________________________________________________
 
 ____________________________________________________________________________________________________________________
 
-##Setup:
+## Setup:
 
 Create a file called token.txt within the resources directory containing the token for your discord bot.
 
