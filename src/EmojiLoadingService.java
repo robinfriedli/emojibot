@@ -1,3 +1,4 @@
+import com.google.common.collect.Lists;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -6,7 +7,6 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 public class EmojiLoadingService {
@@ -21,7 +21,7 @@ public class EmojiLoadingService {
     public List<Emoji> loadEmojis() {
         Document doc = getDocument();
         NodeList emojiList = doc.getElementsByTagName("emoji");
-        List<Emoji> emojis = new ArrayList<>();
+        List<Emoji> emojis = Lists.newArrayList();
 
         for (int i = 0; i < emojiList.getLength(); i++) {
             Node emoji = emojiList.item(i);
@@ -37,7 +37,7 @@ public class EmojiLoadingService {
     }
 
     private List<Keyword> getKeywords(Element elem) {
-        List<Keyword> keywordList = new ArrayList<>();
+        List<Keyword> keywordList = Lists.newArrayList();
 
         NodeList keywords = elem.getElementsByTagName("keyword");
         for (int e = 0; e < keywords.getLength(); e++) {

@@ -1,4 +1,5 @@
-import java.util.ArrayList;
+import com.google.common.collect.Lists;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,7 @@ public class Emoji {
     }
 
     public static List<Keyword> getAllKeywords(List<Emoji> emojis) {
-        List<Keyword> keywords = new ArrayList<>();
+        List<Keyword> keywords = Lists.newArrayList();
         for (Emoji emoji : emojis) {
             keywords.addAll(emoji.getKeywords());
         }
@@ -47,7 +48,7 @@ public class Emoji {
     }
 
     public static List<Emoji> loadFromKeyword(List<Keyword> keywords, List<Emoji> emojis) {
-        List<Emoji> selectedEmojis = new ArrayList<>();
+        List<Emoji> selectedEmojis = Lists.newArrayList();
         for (Emoji emoji : emojis) {
             List<Keyword> keywordsForEmoji = emoji.getKeywords();
             for (Keyword keyword : keywordsForEmoji) {
@@ -60,7 +61,7 @@ public class Emoji {
     }
 
     public static List<Emoji> loadFromKeyword(Keyword keyword, List<Emoji> emojis) {
-        List<Emoji> selectedEmojis = new ArrayList<>();
+        List<Emoji> selectedEmojis = Lists.newArrayList();
         for (Emoji emoji : emojis) {
             List<Keyword> keywordsForEmoji = emoji.getKeywords();
             for (Keyword keywordForEmoji : keywordsForEmoji) {
@@ -76,7 +77,7 @@ public class Emoji {
         List<Emoji> foundEmojis = emojis.stream().filter(e -> e.getEmojiValue().equals(value)).collect(Collectors.toList());
 
         if (foundEmojis.size() > 1) {
-            throw new IllegalStateException("emoji value not unique, fix your xml file");
+            throw new IllegalStateException("emoji value: " + value + " not unique, use the clean command or fix your xml file manually");
         } else if (foundEmojis.size() == 1) {
             return foundEmojis.get(0);
         }

@@ -1,4 +1,5 @@
-import java.util.ArrayList;
+import com.google.common.collect.Lists;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -61,13 +62,13 @@ public class StringListImpl implements StringList {
     }
 
     public static StringList create(String[] stringArray) {
-        List<String> strings = new ArrayList<>(Arrays.asList(stringArray));
+        List<String> strings = Lists.newArrayList(Arrays.asList(stringArray));
 
         return new StringListImpl(strings);
     }
 
     public static StringList charsToList(String string) {
-        List<String> charsAsString = new ArrayList<>();
+        List<String> charsAsString = Lists.newArrayList();
         for (Character character : string.toCharArray()) {
             charsAsString.add(character.toString());
         }

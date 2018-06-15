@@ -1,4 +1,5 @@
-import java.util.ArrayList;
+import com.google.common.collect.Lists;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -16,7 +17,7 @@ public class TextManipulationService {
     private final List<Emoji> emojis;
     private final List<Keyword> keywords;
 
-    private static List<String> wrappers = new ArrayList<>(Arrays.asList("_", "*", "~", "```"));
+    private static List<String> wrappers = Lists.newArrayList(Arrays.asList("_", "*", "~", "```"));
 
     public TextManipulationService(boolean randFormat, List<Emoji> emojis) {
         this.randFormat = randFormat;
@@ -41,7 +42,7 @@ public class TextManipulationService {
      * @return modified input
      */
     private String applyKeywords(String input) {
-        List<String> handledKeywords = new ArrayList<>();
+        List<String> handledKeywords = Lists.newArrayList();
 
         for (Keyword keyword : keywords) {
             String keywordValue = keyword.getKeywordValue();
@@ -104,7 +105,7 @@ public class TextManipulationService {
      * @return positions of keyword
      */
     private List<Integer> findOccurrences(String input, String keyword) {
-        List<Integer> positions = new ArrayList<>();
+        List<Integer> positions = Lists.newArrayList();
         for (int i = 0; (i = input.toLowerCase().indexOf(keyword, i)) >= 0; i++) {
             positions.add(i);
         }

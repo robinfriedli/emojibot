@@ -33,6 +33,12 @@ Remove keywords: e!rm "emoji1, emoji2" "keyword1, keyword2"
     Notice:
     Specify the emojis from which you want to remove the keywords.
 
+Merge duplicate emojis and duplicate keywords on the same emoji: e!clean
+
+    Notice: emojis and keywords can only duplicate if manually meddling with the xml file,
+    the bot does not duplicate anything
+    when merging keywords the replace flag is set to true if all keywords are true
+
 To copy paste emojis see https://emojipedia.org
 
 GitHub: https://github.com/robinfriedli/emojibot

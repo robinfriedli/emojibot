@@ -1,3 +1,6 @@
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Message;
@@ -6,10 +9,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import javax.security.auth.login.LoginException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DiscordListener extends ListenerAdapter {
@@ -20,6 +20,7 @@ public class DiscordListener extends ListenerAdapter {
     private static final String COMMAND_HELP = "e!help";
     private static final String COMMAND_LIST = "e!list";
     private static final String COMMAND_SEARCH = "e!search";
+    private static final String COMMAND_CLEAN = "e!clean";
 
     public static void main(String[] args) {
         try {
@@ -62,6 +63,11 @@ public class DiscordListener extends ListenerAdapter {
 
             if (msg.startsWith(COMMAND_SEARCH)) {
                 searchQuery(message, msg);
+            }
+
+            if (msg.equals(COMMAND_CLEAN)) {
+                cleanDuplicateEmojis();
+                cleanDuplicateKeywords();
             }
 
         }
@@ -201,7 +207,7 @@ public class DiscordListener extends ListenerAdapter {
 
         if (quotations.size() == 2) {
             String emojiStrings = msg.substring(msg.indexOf("\"") + 1, msg.lastIndexOf("\""));
-            List<String> emojiList = new ArrayList<>(Arrays.asList(emojiStrings.split(", ")));
+            List<String> emojiList = Lists.newArrayList(Arrays.asList(emojiStrings.split(", ")));
             List<String> missingEmojis = emojiList.stream().filter(e -> !alertService.emojiExists(e, emojis))
                     .collect(Collectors.toList());
 
@@ -218,8 +224,8 @@ public class DiscordListener extends ListenerAdapter {
             String emojiStrings = msg.substring(quotations.get(0) + 1, quotations.get(1));
             String keywords = msg.substring(quotations.get(2) + 1, quotations.get(3));
 
-            List<String> emojiList = new ArrayList<>(Arrays.asList(emojiStrings.split(", ")));
-            List<String> keywordList = new ArrayList<>(Arrays.asList(keywords.split(", ")));
+            List<String> emojiList = Lists.newArrayList(Arrays.asList(emojiStrings.split(", ")));
+            List<String> keywordList = Lists.newArrayList(Arrays.asList(keywords.split(", ")));
             List<String> missingEmojis = emojiList.stream().filter(e -> !alertService.emojiExists(e, emojis))
                     .collect(Collectors.toList());
 
@@ -252,7 +258,7 @@ public class DiscordListener extends ListenerAdapter {
         EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
         List<Emoji> emojis = emojiLoadingService.loadEmojis();
         //if the output exceeds 2000 characters separate into several messages
-        List<String> outputParts = new ArrayList<>();
+        List<String> outputParts = Lists.newArrayList();
         outputParts.add("");
 
         for (Emoji emoji : emojis) {
@@ -335,8 +341,61 @@ public class DiscordListener extends ListenerAdapter {
         channel.sendMessage(responseBuilder.toString()).queue();
     }
 
+    private void cleanDuplicateEmojis() {
+        EmojiAddingService emojiAddingService = new EmojiAddingService();
+        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
+
+        List<Emoji> emojis = emojiLoadingService.loadEmojis();
+        List<String> checkedEmojis = Lists.newArrayList();
+        List<String> duplicateEmojis = Lists.newArrayList();
+
+        for (Emoji emoji : emojis) {
+            String emojiValue = emoji.getEmojiValue();
+
+            //if emoji value already exists add it to duplicates but only once
+            if (!checkedEmojis.contains(emojiValue)) {
+                checkedEmojis.add(emojiValue);
+            } else if (!duplicateEmojis.contains(emojiValue)) {
+                duplicateEmojis.add(emojiValue);
+            }
+        }
+
+        emojiAddingService.mergeDuplicateEmojis(duplicateEmojis);
+    }
+
+    private void cleanDuplicateKeywords() {
+        EmojiAddingService emojiAddingService = new EmojiAddingService();
+        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
+
+        List<Emoji> emojis = emojiLoadingService.loadEmojis();
+        Multimap<String, String> emojisWithDuplicateKeywords = ArrayListMultimap.create();
+
+        for (Emoji emoji : emojis) {
+            List<Keyword> keywords = emoji.getKeywords();
+            List<String> checkedKeywords = Lists.newArrayList();
+
+            for (Keyword keyword : keywords) {
+                String keywordValue = keyword.getKeywordValue();
+                //check if keyword has come up already
+                if (!checkedKeywords.contains(keywordValue)) {
+                    checkedKeywords.add(keywordValue);
+                }
+                //if keyword comes up again, meaning it is duplicate, check if emoji is already in the multimap
+                else if (!emojisWithDuplicateKeywords.containsKey(emoji.getEmojiValue())) {
+                    emojisWithDuplicateKeywords.put(emoji.getEmojiValue(), keywordValue);
+                }
+                //if emoji was already added check if the same particular keyword has already been added
+                else if (!emojisWithDuplicateKeywords.get(emoji.getEmojiValue()).contains(keywordValue)) {
+                    emojisWithDuplicateKeywords.put(emoji.getEmojiValue(), keywordValue);
+                }
+            }
+        }
+
+        emojiAddingService.mergeDuplicateKeywords(emojisWithDuplicateKeywords);
+    }
+
     private List<Integer> findOccurrences(String input, String keyword) {
-        List<Integer> positions = new ArrayList<>();
+        List<Integer> positions = Lists.newArrayList();
         for (int i = 0; (i = input.toLowerCase().indexOf(keyword, i)) >= 0; i++) {
             positions.add(i);
         }

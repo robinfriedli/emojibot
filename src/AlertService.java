@@ -1,6 +1,6 @@
+import com.google.common.collect.Lists;
 import net.dv8tion.jda.core.entities.MessageChannel;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -33,11 +33,11 @@ public class AlertService {
         int indexForReplaceTag = 0;
         for (String keyword : keywords) {
             //emojis where the keyword doesn't exist yet
-            List<String> emojisAdded = new ArrayList<>();
+            List<String> emojisAdded = Lists.newArrayList();
             //emojis where the keyword exists with a different replace value
-            List<String> emojisAdjusted = new ArrayList<>();
+            List<String> emojisAdjusted = Lists.newArrayList();
             //emojis where the keyword already exists as is
-            List<String> emojisExist = new ArrayList<>();
+            List<String> emojisExist = Lists.newArrayList();
 
             for (String emoji : emojis) {
                 Emoji emojiObj = Emoji.loadFromValue(emoji, allEmojis);
@@ -147,8 +147,8 @@ public class AlertService {
 
         if (Arrays.stream(emojis).anyMatch(e -> !emojiExists(e, allEmojis))) {
             builder.append("emojis added: ");
-            List<String> addedEmojis = new ArrayList<>();
-            List<String> existingEmojis = new ArrayList<>();
+            List<String> addedEmojis = Lists.newArrayList();
+            List<String> existingEmojis = Lists.newArrayList();
 
             for (String emoji : emojis) {
                 if (!emojiExists(emoji, allEmojis)) {

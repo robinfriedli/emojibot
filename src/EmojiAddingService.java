@@ -1,3 +1,5 @@
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -8,8 +10,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class EmojiAddingService {
 
@@ -116,7 +118,7 @@ public class EmojiAddingService {
     }
 
     private List<Element> getEmojiElems(Document doc, List<String> emojiStrings) {
-        List<Element> elems = new ArrayList<>();
+        List<Element> elems = Lists.newArrayList();
         NodeList emojiList = doc.getElementsByTagName("emoji");
 
         for (int i = 0; i < emojiList.getLength(); i++) {
@@ -147,7 +149,7 @@ public class EmojiAddingService {
     }
 
     private List<Element> getKeywordElems(Element emojiElem, List<String> keywordStrings) {
-        List<Element> elems = new ArrayList<>();
+        List<Element> elems = Lists.newArrayList();
         NodeList keywordList = emojiElem.getElementsByTagName("keyword");
 
         for (int i = 0; i < keywordList.getLength(); i++) {
@@ -175,6 +177,108 @@ public class EmojiAddingService {
         }
 
         return null;
+    }
+
+    public void mergeDuplicateEmojis(List<String> duplicateEmojis) {
+        Document doc = emojiLoadingService.getDocument();
+        Element rootElem = doc.getDocumentElement();
+
+        NodeList emojis = doc.getElementsByTagName("emoji");
+        List<Element> newEmojis = Lists.newArrayList();
+
+        //create new emoji elements for each duplicate emoji
+        for (String duplicateEmoji : duplicateEmojis) {
+            Element emoji = doc.createElement("emoji");
+            emoji.setAttribute("value", duplicateEmoji);
+
+            newEmojis.add(emoji);
+        }
+
+        for (Element newEmoji : newEmojis) {
+            String emojiValue = newEmoji.getAttribute("value");
+            List<Element> otherEmojis = Lists.newArrayList();
+            List<Element> keywords = Lists.newArrayList();
+
+            //get other emojis with the same value
+            for (int i = 0; i < emojis.getLength(); i++) {
+                Element emojiElem = (Element) emojis.item(i);
+
+                if (emojiElem.getAttribute("value").equals(emojiValue)) {
+                    otherEmojis.add(emojiElem);
+                }
+            }
+
+            //get keywords of those emojis and remove them after
+            for (Element otherEmoji : otherEmojis) {
+                NodeList keywordElems = otherEmoji.getElementsByTagName("keyword");
+
+                for (int i = 0; i < keywordElems.getLength(); i++) {
+                    keywords.add((Element) keywordElems.item(i));
+                }
+
+                rootElem.removeChild(otherEmoji);
+            }
+
+            //add keywords of the other emojis of the same value
+            for (Element keyword : keywords) {
+                newEmoji.appendChild(keyword);
+            }
+
+            rootElem.appendChild(newEmoji);
+        }
+
+        writeToFile(doc);
+    }
+
+    public void mergeDuplicateKeywords(Multimap<String, String> emojisWithDuplicateKeywords) {
+        Document doc = emojiLoadingService.getDocument();
+
+        List<Element> emojis = nodeListToElementList(doc.getElementsByTagName("emoji"));
+
+        for (String emoji : emojisWithDuplicateKeywords.keys()) {
+            //load the emoji element for the current emoji for which we want to merge duplicate keywords
+            List<Element> emojiElems = emojis.stream().filter(e -> e.getAttribute("value").equals(emoji))
+                    .collect(Collectors.toList());
+            if (emojiElems.size() == 1) {
+                Element emojiElem = emojiElems.get(0);
+                List<Element> keywordElems = nodeListToElementList(emojiElem.getElementsByTagName("keyword"));
+
+                //loop over the different pairs of duplicate keywords on current emoji
+                for (String keyword : emojisWithDuplicateKeywords.get(emoji)) {
+                    //load all duplicates for the current keyword
+                    List<Element> selectedKeywords = keywordElems.stream().filter(k -> k.getTextContent().equals(keyword))
+                            .collect(Collectors.toList());
+                    //set replace = true for the new keyword if all keywords are true
+                    Boolean isReplace = selectedKeywords.stream().allMatch(k -> Boolean.parseBoolean(k.getAttribute("replace")));
+
+                    //remove duplicates
+                    for (Element keywordElem : selectedKeywords) {
+                        emojiElem.removeChild(keywordElem);
+                    }
+
+                    //create and add new keyword
+                    Element newKeyword = doc.createElement("keyword");
+                    newKeyword.setAttribute("replace", isReplace.toString());
+                    newKeyword.setTextContent(keyword);
+                    emojiElem.appendChild(newKeyword);
+                }
+            } else if (emojiElems.size() > 1) {
+                throw new IllegalStateException("More than one emoji found for value " + emoji + ". Keyword cleaning failed.");
+            } else {
+                throw new IllegalStateException("No emoji found for value " + emoji + ". Keyword cleaning failed.");
+            }
+        }
+
+        writeToFile(doc);
+    }
+
+    private List<Element> nodeListToElementList(NodeList nodeList) {
+        List<Element> elements = Lists.newArrayList();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            elements.add((Element) nodeList.item(i));
+        }
+
+        return elements;
     }
 
     private void writeToFile(Document doc) {

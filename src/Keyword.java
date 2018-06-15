@@ -1,4 +1,5 @@
-import java.util.ArrayList;
+import com.google.common.collect.Lists;
+
 import java.util.List;
 
 public class Keyword {
@@ -28,7 +29,7 @@ public class Keyword {
     }
 
     public static List<String> getAllKeywordValues(List<Keyword> keywords) {
-        List<String> keywordValues = new ArrayList<>();
+        List<String> keywordValues = Lists.newArrayList();
         for (Keyword keyword : keywords) {
             keywordValues.add(keyword.getKeywordValue());
         }
@@ -36,7 +37,7 @@ public class Keyword {
     }
 
     public static List<Keyword> getSelectedKeywords(List<Keyword> keywords, String value) {
-        List<Keyword> selectedKeywords = new ArrayList<>();
+        List<Keyword> selectedKeywords = Lists.newArrayList();
         for (Keyword keyword : keywords) {
             if (keyword.getKeywordValue().equals(value)) {
                 selectedKeywords.add(keyword);
