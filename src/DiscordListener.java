@@ -1,6 +1,5 @@
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -11,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class DiscordListener extends ListenerAdapter {
 
@@ -118,7 +118,12 @@ public class DiscordListener extends ListenerAdapter {
 
         response.append("**").append(message.getAuthor().getName()).append(":").append("**").append(System.lineSeparator())
                 .append(service.getOutput(input));
-        channel.sendMessage(response.toString()).queue();
+
+        try {
+            channel.sendMessage(response.toString()).queue();
+        } catch (IllegalArgumentException e) {
+            channel.sendMessage(e.getMessage()).queue();
+        }
     }
 
     /**
@@ -132,15 +137,20 @@ public class DiscordListener extends ListenerAdapter {
      */
     private void saveEmojis(Message message, String msg) {
         EmojiAddingService emojiAddingService = new EmojiAddingService();
+        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
+        AlertService alertService = new AlertService();
+
         MessageChannel channel = message.getChannel();
+        List<Emoji> allEmojis = emojiLoadingService.loadEmojis();
         List<Integer> quotations = findOccurrences(msg, "\"");
 
         //if following syntax is used: +e "emoji1, emoji2"
         if (quotations.size() == 2) {
             String emojis = msg.substring(msg.indexOf("\"") + 1, msg.lastIndexOf("\""));
             String[] emojiList = emojis.split(", ");
-            emojiAddingService.addEmojis(emojiList);
 
+            emojiAddingService.addEmojis(emojiList);
+            alertService.alertAddedEmojis(emojiList, allEmojis, channel);
         }
 
         //if following syntax is used: +e "emoji1, emoji2" "keyword1, keyword2" "true, false"
@@ -156,15 +166,20 @@ public class DiscordListener extends ListenerAdapter {
             if (Arrays.stream(replaceTagList).allMatch(s -> s.equals("true") || s.equals("false"))
                     && keywordList.length == replaceTagList.length
                     && Arrays.stream(keywordList).allMatch(k -> k.equals(k.toLowerCase()))) {
-                emojiAddingService.addEmojis(emojiList, keywordList, replaceTagList);
+                try {
+                    emojiAddingService.addEmojis(emojiList, keywordList, replaceTagList);
+                    alertService.alertAddedEmojis(emojiList, keywordList, replaceTagList, allEmojis, channel);
+                } catch (IllegalStateException e) {
+                    channel.sendMessage(e.getMessage()).queue();
+                }
             } else {
                 channel.sendMessage("There has to be one replace flag for each keyword" +
                         "\nReplace tag has to be either 'true' or 'false'" +
                         "\nKeywords have to be lower case" +
-                        "\nSee 'e!help'").queue();
+                        "\nSee '" + COMMAND_HELP + "'").queue();
             }
         } else {
-            channel.sendMessage("Invalid input. See 'e!help'").queue();
+            channel.sendMessage("Invalid input. See '" + COMMAND_HELP + "'").queue();
         }
     }
 
@@ -177,23 +192,54 @@ public class DiscordListener extends ListenerAdapter {
      */
     private void deleteEmojis(Message message, String msg) {
         EmojiAddingService emojiAddingService = new EmojiAddingService();
+        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
+        AlertService alertService = new AlertService();
+
         MessageChannel channel = message.getChannel();
+        List<Emoji> emojis = emojiLoadingService.loadEmojis();
         List<Integer> quotations = findOccurrences(msg, "\"");
 
         if (quotations.size() == 2) {
-            String emojis = msg.substring(msg.indexOf("\"") + 1, msg.lastIndexOf("\""));
-            String[] emojiList = emojis.split(", ");
-            emojiAddingService.removeEmojis(Arrays.asList(emojiList));
+            String emojiStrings = msg.substring(msg.indexOf("\"") + 1, msg.lastIndexOf("\""));
+            List<String> emojiList = new ArrayList<>(Arrays.asList(emojiStrings.split(", ")));
+            List<String> missingEmojis = emojiList.stream().filter(e -> !alertService.emojiExists(e, emojis))
+                    .collect(Collectors.toList());
+
+            if (!missingEmojis.isEmpty()) {
+                alertService.alertMissingEmojis(missingEmojis, channel);
+                emojiList.removeAll(missingEmojis);
+            }
+
+            if (!emojiList.isEmpty()) {
+                emojiAddingService.removeEmojis(emojiList);
+                alertService.alertRemovedEmojis(emojiList, channel);
+            }
         } else if (quotations.size() == 4) {
-            String emojis = msg.substring(quotations.get(0) + 1, quotations.get(1));
+            String emojiStrings = msg.substring(quotations.get(0) + 1, quotations.get(1));
             String keywords = msg.substring(quotations.get(2) + 1, quotations.get(3));
 
-            String[] emojiList = emojis.split(", ");
-            String[] keywordList = keywords.split(", ");
+            List<String> emojiList = new ArrayList<>(Arrays.asList(emojiStrings.split(", ")));
+            List<String> keywordList = new ArrayList<>(Arrays.asList(keywords.split(", ")));
+            List<String> missingEmojis = emojiList.stream().filter(e -> !alertService.emojiExists(e, emojis))
+                    .collect(Collectors.toList());
 
-            emojiAddingService.removeKeywords(Arrays.asList(emojiList), Arrays.asList(keywordList));
+            if (!missingEmojis.isEmpty()) {
+                alertService.alertMissingEmojis(missingEmojis, channel);
+                emojiList.removeAll(missingEmojis);
+            }
+
+            for (String keyword : keywordList) {
+                if (emojiList.stream().anyMatch(e -> !alertService.keywordExists(keyword, e, emojis))) {
+                    alertService.alertMissingKeyword(keyword, emojiList, emojis, channel);
+                }
+            }
+
+            if (!emojiList.isEmpty()) {
+                emojiAddingService.removeKeywords(emojiList, keywordList);
+                alertService.alertRemovedKeywords(keywordList, emojiList, emojis, channel);
+            }
         } else {
-            channel.sendMessage("Invalid input. See 'e!help'").queue();
+            channel.sendMessage("Invalid input. See '" + COMMAND_HELP + "'").queue();
         }
     }
 
@@ -205,21 +251,38 @@ public class DiscordListener extends ListenerAdapter {
     private void listEmojis(Message message) {
         EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
         List<Emoji> emojis = emojiLoadingService.loadEmojis();
-        StringBuilder builder = new StringBuilder();
+        //if the output exceeds 2000 characters separate into several messages
+        List<String> outputParts = new ArrayList<>();
+        outputParts.add("");
 
         for (Emoji emoji : emojis) {
-            builder.append(emoji.getEmojiValue()).append(System.lineSeparator());
+            StringBuilder builder = new StringBuilder();
+            builder.append(emoji.getEmojiValue());
 
-            for (Keyword keyword : emoji.getKeywords()) {
-                builder.append("\t").append(keyword.getKeywordValue()).append("\t").append(keyword.isReplace())
-                        .append(System.lineSeparator());
+            List<Keyword> keywords = emoji.getKeywords();
+            for (int i = 0; i < keywords.size(); i++) {
+                if (i == 0) builder.append("\t");
+
+                builder.append(keywords.get(i).getKeywordValue()).append(" (").append(keywords.get(i).isReplace()).append(")");
+
+                if (i < keywords.size() - 1) builder.append(", ");
             }
 
             builder.append(System.lineSeparator());
+
+            //add to part if character length does not exceed 2000 else create new part
+            int lastPart = outputParts.size() - 1;
+            if (outputParts.get(lastPart).length() + builder.length() < 2000) {
+                outputParts.set(lastPart, outputParts.get(lastPart) + builder.toString());
+            } else {
+                outputParts.add(builder.toString());
+            }
         }
 
         MessageChannel channel = message.getChannel();
-        channel.sendMessage(builder.toString()).queue();
+        for (String outputPart : outputParts) {
+            channel.sendMessage(outputPart).queue();
+        }
     }
 
     /**

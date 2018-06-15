@@ -32,6 +32,21 @@ public class StringListImpl implements StringList {
     }
 
     @Override
+    public String toSeparatedString() {
+        StringBuilder builder = new StringBuilder();
+
+        for (int i = 0; i < values.size(); i++) {
+            builder.append(values.get(i));
+
+            if (i < values.size() - 1) {
+                builder.append(", ");
+            }
+        }
+
+        return builder.toString();
+    }
+
+    @Override
     public void replaceValueAt(int index, String value) {
         values.set(index, value);
     }

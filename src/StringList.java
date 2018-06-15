@@ -13,6 +13,11 @@ public interface StringList {
     String toString();
 
     /**
+     * @return StringList values as String separated by ", "
+     */
+    String toSeparatedString();
+
+    /**
      * @return StringList values as List
      */
     List<String> getValues();

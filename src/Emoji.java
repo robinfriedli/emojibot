@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Emoji {
 
@@ -69,6 +70,18 @@ public class Emoji {
             }
         }
         return selectedEmojis;
+    }
+
+    public static Emoji loadFromValue(String value, List<Emoji> emojis) {
+        List<Emoji> foundEmojis = emojis.stream().filter(e -> e.getEmojiValue().equals(value)).collect(Collectors.toList());
+
+        if (foundEmojis.size() > 1) {
+            throw new IllegalStateException("emoji value not unique, fix your xml file");
+        } else if (foundEmojis.size() == 1) {
+            return foundEmojis.get(0);
+        }
+
+        return null;
     }
 
 }
