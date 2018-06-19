@@ -328,7 +328,9 @@ public class DiscordListener extends ListenerAdapter {
             List<Emoji> emojisForKeyword = Emoji.loadFromKeyword(optionalKeyword.get(), emojis);
 
             for (Emoji emoji : emojisForKeyword) {
-                responseBuilder.append(emoji.getEmojiValue());
+                responseBuilder.append(emoji.getEmojiValue())
+                        .append("\treplace: ").append(emoji.getKeyword(query).isReplace())
+                        .append(System.lineSeparator());
             }
         }
 
