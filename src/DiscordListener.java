@@ -66,8 +66,7 @@ public class DiscordListener extends ListenerAdapter {
             }
 
             if (msg.equals(COMMAND_CLEAN)) {
-                cleanDuplicateEmojis();
-                cleanDuplicateKeywords();
+                cleanXml(message.getChannel());
             }
 
         }
@@ -341,11 +340,43 @@ public class DiscordListener extends ListenerAdapter {
         channel.sendMessage(responseBuilder.toString()).queue();
     }
 
-    private void cleanDuplicateEmojis() {
-        EmojiAddingService emojiAddingService = new EmojiAddingService();
+    private void cleanXml(MessageChannel channel) {
         EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-
+        EmojiAddingService emojiAddingService = new EmojiAddingService();
+        AlertService alertService = new AlertService();
         List<Emoji> emojis = emojiLoadingService.loadEmojis();
+
+        List<String> duplicateEmojis = getDuplicateEmojis(emojis);
+        List<String> upperCaseKeywords = getUpperCaseKeywords(emojis);
+        Multimap<String, String> duplicateKeywords = getDuplicateKeywords(emojis);
+
+        if (duplicateEmojis.isEmpty() && duplicateKeywords.isEmpty() && upperCaseKeywords.isEmpty()) {
+            channel.sendMessage("No configuration errors found.").queue();
+        } else {
+            if (!duplicateEmojis.isEmpty()) {
+                emojiAddingService.mergeDuplicateEmojis(duplicateEmojis);
+                alertService.alertDuplicateEmojis(duplicateEmojis, channel);
+                //check again for duplicate keywords after merging emojis
+                emojis = emojiLoadingService.loadEmojis();
+                duplicateKeywords = getDuplicateKeywords(emojis);
+            }
+
+            if (!upperCaseKeywords.isEmpty()) {
+                emojiAddingService.setKeywordsToLowerCase();
+                alertService.alertUpperCaseKeywords(upperCaseKeywords, channel);
+                //might also result in duplicate keywords so reload (E, e -> e, e)
+                emojis = emojiLoadingService.loadEmojis();
+                duplicateKeywords = getDuplicateKeywords(emojis);
+            }
+
+            if (!duplicateKeywords.isEmpty()) {
+                emojiAddingService.mergeDuplicateKeywords(duplicateKeywords);
+                alertService.alertDuplicateKeywords(duplicateKeywords, channel);
+            }
+        }
+    }
+
+    private List<String> getDuplicateEmojis(List<Emoji> emojis) {
         List<String> checkedEmojis = Lists.newArrayList();
         List<String> duplicateEmojis = Lists.newArrayList();
 
@@ -360,14 +391,10 @@ public class DiscordListener extends ListenerAdapter {
             }
         }
 
-        emojiAddingService.mergeDuplicateEmojis(duplicateEmojis);
+        return duplicateEmojis;
     }
 
-    private void cleanDuplicateKeywords() {
-        EmojiAddingService emojiAddingService = new EmojiAddingService();
-        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-
-        List<Emoji> emojis = emojiLoadingService.loadEmojis();
+    private Multimap<String, String> getDuplicateKeywords(List<Emoji> emojis) {
         Multimap<String, String> emojisWithDuplicateKeywords = ArrayListMultimap.create();
 
         for (Emoji emoji : emojis) {
@@ -391,7 +418,19 @@ public class DiscordListener extends ListenerAdapter {
             }
         }
 
-        emojiAddingService.mergeDuplicateKeywords(emojisWithDuplicateKeywords);
+        return emojisWithDuplicateKeywords;
+    }
+
+    /**
+     * Find keywords that aren't lower case
+     */
+    private List<String> getUpperCaseKeywords(List<Emoji> emojis) {
+        List<Keyword> keywords = Emoji.getAllKeywords(emojis);
+
+        return keywords.stream()
+                .filter(k -> !k.getKeywordValue().equals(k.getKeywordValue().toLowerCase()))
+                .map(Keyword::getKeywordValue)
+                .collect(Collectors.toList());
     }
 
     private List<Integer> findOccurrences(String input, String keyword) {
