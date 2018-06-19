@@ -1,6 +1,7 @@
 import com.google.common.collect.Lists;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 public class StringListImpl implements StringList {
@@ -59,6 +60,10 @@ public class StringListImpl implements StringList {
 
     public static StringList create(List<String> stringList) {
         return new StringListImpl(stringList);
+    }
+
+    public static StringList create(Collection<String> strings) {
+        return new StringListImpl(Lists.newArrayList(strings));
     }
 
     public static StringList create(String[] stringArray) {

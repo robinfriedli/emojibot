@@ -109,76 +109,6 @@ public class EmojiAddingService {
         writeToFile(doc);
     }
 
-    private boolean emojiExists(Document doc, String emojiString) {
-        return getEmojiElem(doc, emojiString) != null;
-    }
-
-    private boolean keywordExists(Element emojiElem, String keywordString) {
-        return getKeywordElem(emojiElem, keywordString) != null;
-    }
-
-    private List<Element> getEmojiElems(Document doc, List<String> emojiStrings) {
-        List<Element> elems = Lists.newArrayList();
-        NodeList emojiList = doc.getElementsByTagName("emoji");
-
-        for (int i = 0; i < emojiList.getLength(); i++) {
-            Element emoji = (Element) emojiList.item(i);
-            String emojiValue = emoji.getAttribute("value");
-
-            if (emojiStrings.contains(emojiValue)) {
-                elems.add(emoji);
-            }
-        }
-
-        return elems;
-    }
-
-    private Element getEmojiElem(Document doc, String emojiString) {
-        NodeList emojiList = doc.getElementsByTagName("emoji");
-
-        for (int i = 0; i < emojiList.getLength(); i++) {
-            Element emoji = (Element) emojiList.item(i);
-            String emojiValue = emoji.getAttribute("value");
-
-            if (emojiString.equals(emojiValue)) {
-                return emoji;
-            }
-        }
-
-        return null;
-    }
-
-    private List<Element> getKeywordElems(Element emojiElem, List<String> keywordStrings) {
-        List<Element> elems = Lists.newArrayList();
-        NodeList keywordList = emojiElem.getElementsByTagName("keyword");
-
-        for (int i = 0; i < keywordList.getLength(); i++) {
-            Element keyword = (Element) keywordList.item(i);
-            String keywordValue = keyword.getTextContent();
-
-            if (keywordStrings.contains(keywordValue)) {
-                elems.add(keyword);
-            }
-        }
-
-        return elems;
-    }
-
-    private Element getKeywordElem(Element emojiElem, String keywordString) {
-        NodeList keywordList = emojiElem.getElementsByTagName("keyword");
-
-        for (int i = 0; i < keywordList.getLength(); i++) {
-            Element keyword = (Element) keywordList.item(i);
-            String keywordValue = keyword.getTextContent();
-
-            if (keywordValue.equals(keywordString)) {
-                return keyword;
-            }
-        }
-
-        return null;
-    }
-
     public void mergeDuplicateEmojis(List<String> duplicateEmojis) {
         Document doc = emojiLoadingService.getDocument();
         Element rootElem = doc.getDocumentElement();
@@ -270,6 +200,91 @@ public class EmojiAddingService {
         }
 
         writeToFile(doc);
+    }
+
+    public void setKeywordsToLowerCase() {
+        Document doc = emojiLoadingService.getDocument();
+        List<Element> keywordElems = nodeListToElementList(doc.getElementsByTagName("keyword"));
+
+        for (Element keywordElem : keywordElems) {
+            String keyword = keywordElem.getTextContent();
+
+            if (!keyword.equals(keyword.toLowerCase())) {
+                keywordElem.setTextContent(keyword.toLowerCase());
+            }
+        }
+
+        writeToFile(doc);
+    }
+
+    private boolean emojiExists(Document doc, String emojiString) {
+        return getEmojiElem(doc, emojiString) != null;
+    }
+
+    private boolean keywordExists(Element emojiElem, String keywordString) {
+        return getKeywordElem(emojiElem, keywordString) != null;
+    }
+
+    private List<Element> getEmojiElems(Document doc, List<String> emojiStrings) {
+        List<Element> elems = Lists.newArrayList();
+        NodeList emojiList = doc.getElementsByTagName("emoji");
+
+        for (int i = 0; i < emojiList.getLength(); i++) {
+            Element emoji = (Element) emojiList.item(i);
+            String emojiValue = emoji.getAttribute("value");
+
+            if (emojiStrings.contains(emojiValue)) {
+                elems.add(emoji);
+            }
+        }
+
+        return elems;
+    }
+
+    private Element getEmojiElem(Document doc, String emojiString) {
+        NodeList emojiList = doc.getElementsByTagName("emoji");
+
+        for (int i = 0; i < emojiList.getLength(); i++) {
+            Element emoji = (Element) emojiList.item(i);
+            String emojiValue = emoji.getAttribute("value");
+
+            if (emojiString.equals(emojiValue)) {
+                return emoji;
+            }
+        }
+
+        return null;
+    }
+
+    private List<Element> getKeywordElems(Element emojiElem, List<String> keywordStrings) {
+        List<Element> elems = Lists.newArrayList();
+        NodeList keywordList = emojiElem.getElementsByTagName("keyword");
+
+        for (int i = 0; i < keywordList.getLength(); i++) {
+            Element keyword = (Element) keywordList.item(i);
+            String keywordValue = keyword.getTextContent();
+
+            if (keywordStrings.contains(keywordValue)) {
+                elems.add(keyword);
+            }
+        }
+
+        return elems;
+    }
+
+    private Element getKeywordElem(Element emojiElem, String keywordString) {
+        NodeList keywordList = emojiElem.getElementsByTagName("keyword");
+
+        for (int i = 0; i < keywordList.getLength(); i++) {
+            Element keyword = (Element) keywordList.item(i);
+            String keywordValue = keyword.getTextContent();
+
+            if (keywordValue.equals(keywordString)) {
+                return keyword;
+            }
+        }
+
+        return null;
     }
 
     private List<Element> nodeListToElementList(NodeList nodeList) {

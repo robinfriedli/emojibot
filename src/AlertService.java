@@ -1,4 +1,5 @@
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import net.dv8tion.jda.core.entities.MessageChannel;
 
 import java.util.Arrays;
@@ -140,6 +141,32 @@ public class AlertService {
         } else {
             return false;
         }
+    }
+
+    public void alertDuplicateEmojis(List<String> duplicateEmojis, MessageChannel channel) {
+        channel.sendMessage("duplicate emojis: "
+                + StringListImpl.create(duplicateEmojis).toSeparatedString()
+                + " merged")
+                .queue();
+    }
+
+    public void alertDuplicateKeywords(Multimap<String, String> emojisWithDuplicateKeywords, MessageChannel channel) {
+        StringBuilder builder = new StringBuilder();
+
+        for (String emoji : emojisWithDuplicateKeywords.keys()) {
+            builder.append("Keywords merged on emoji ").append(emoji).append(": ")
+                    .append(StringListImpl.create(emojisWithDuplicateKeywords.get(emoji)).toSeparatedString())
+                    .append(System.lineSeparator());
+        }
+
+        channel.sendMessage(builder.toString()).queue();
+    }
+
+    public void alertUpperCaseKeywords(List<String> upperCaseKeywords, MessageChannel channel) {
+        channel.sendMessage("Keywords: "
+                + StringListImpl.create(upperCaseKeywords).toSeparatedString()
+                + " changed to lower case")
+                .queue();
     }
 
     private String buildAddedEmojisAlertMessage(String[] emojis, List<Emoji> allEmojis) {
