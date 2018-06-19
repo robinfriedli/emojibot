@@ -43,7 +43,7 @@ public class AlertService {
             for (String emoji : emojis) {
                 Emoji emojiObj = Emoji.loadFromValue(emoji, allEmojis);
                 if (emojiObj != null) {
-                    Keyword keywordObj = emojiObj.getKeyword(keyword);
+                    Keyword keywordObj = emojiObj.requireKeyword(keyword);
 
                     if (keywordObj == null) {
                         emojisAdded.add(emoji);

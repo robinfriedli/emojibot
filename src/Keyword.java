@@ -43,7 +43,12 @@ public class Keyword {
                 selectedKeywords.add(keyword);
             }
         }
-        return selectedKeywords;
+
+        if (!selectedKeywords.isEmpty()) {
+            return selectedKeywords;
+        } else {
+            throw new IllegalStateException("No keywords found for value " + value + " within provided list");
+        }
     }
 
 }

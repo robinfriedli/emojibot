@@ -17,14 +17,19 @@ public class Emoji {
         return keywords;
     }
 
-    public Keyword getKeyword(String value) {
-        for (Keyword keyword : keywords) {
-            if (keyword.getKeywordValue().equals(value)) {
-                return keyword;
-            }
-        }
+    public Keyword requireKeyword(String value) {
+        List<Keyword> matchedKeywords = keywords.stream()
+                .filter(k -> k.getKeywordValue().equals(value))
+                .collect(Collectors.toList());
 
-        return null;
+        if (matchedKeywords.size() == 1) {
+            return matchedKeywords.get(0);
+        } else if (matchedKeywords.size() > 1) {
+            throw new IllegalStateException("Keyword value " + value + " not unique on emoji " + emojiValue
+                    + "Execute clean command or fix XML manually");
+        } else {
+            throw new IllegalStateException("Keyword value " + value + " not found on emoji " + emojiValue);
+        }
     }
 
     public void setKeywords(List<Keyword> keywords) {
@@ -70,19 +75,23 @@ public class Emoji {
                 }
             }
         }
-        return selectedEmojis;
+        if (!selectedEmojis.isEmpty()) {
+            return selectedEmojis;
+        } else {
+            throw new IllegalStateException("No emojis found for keyword " + keyword.getKeywordValue() + " within provided list");
+        }
     }
 
     public static Emoji loadFromValue(String value, List<Emoji> emojis) {
         List<Emoji> foundEmojis = emojis.stream().filter(e -> e.getEmojiValue().equals(value)).collect(Collectors.toList());
 
         if (foundEmojis.size() > 1) {
-            throw new IllegalStateException("emoji value: " + value + " not unique, use the clean command or fix your xml file manually");
+            throw new IllegalStateException("Emoji value: " + value + " not unique, use the clean command or fix your xml file manually");
         } else if (foundEmojis.size() == 1) {
             return foundEmojis.get(0);
+        } else {
+            throw new IllegalStateException("No emoji found for value: " + value + "within provided list");
         }
-
-        return null;
     }
 
 }

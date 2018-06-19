@@ -329,7 +329,7 @@ public class DiscordListener extends ListenerAdapter {
 
             for (Emoji emoji : emojisForKeyword) {
                 responseBuilder.append(emoji.getEmojiValue())
-                        .append("\treplace: ").append(emoji.getKeyword(query).isReplace())
+                        .append("\treplace: ").append(emoji.requireKeyword(query).isReplace())
                         .append(System.lineSeparator());
             }
         }
