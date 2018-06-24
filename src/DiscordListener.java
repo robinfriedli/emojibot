@@ -1,6 +1,7 @@
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Message;
@@ -142,11 +143,8 @@ public class DiscordListener extends ListenerAdapter {
      */
     private void saveEmojis(Message message, String msg) {
         EmojiAddingService emojiAddingService = new EmojiAddingService();
-        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-        AlertService alertService = new AlertService();
 
         MessageChannel channel = message.getChannel();
-        List<Emoji> allEmojis = emojiLoadingService.loadEmojis();
         List<Integer> quotations = findOccurrences(msg, "\"");
 
         //if following syntax is used: +e "emoji1, emoji2"
@@ -154,8 +152,7 @@ public class DiscordListener extends ListenerAdapter {
             String emojis = msg.substring(msg.indexOf("\"") + 1, msg.lastIndexOf("\""));
             String[] emojiList = emojis.split(", ");
 
-            emojiAddingService.addEmojis(emojiList);
-            alertService.alertAddedEmojis(emojiList, allEmojis, channel);
+            emojiAddingService.addEmojis(emojiList, channel);
         }
 
         //if following syntax is used: +e "emoji1, emoji2" "keyword1, keyword2" "true, false"
@@ -172,8 +169,7 @@ public class DiscordListener extends ListenerAdapter {
                     && keywordList.length == replaceTagList.length
                     && Arrays.stream(keywordList).allMatch(k -> k.equals(k.toLowerCase()))) {
                 try {
-                    emojiAddingService.addEmojis(emojiList, keywordList, replaceTagList);
-                    alertService.alertAddedEmojis(emojiList, keywordList, replaceTagList, allEmojis, channel);
+                    emojiAddingService.addEmojis(emojiList, keywordList, replaceTagList, channel);
                 } catch (IllegalStateException e) {
                     channel.sendMessage(e.getMessage()).queue();
                 }
@@ -197,52 +193,23 @@ public class DiscordListener extends ListenerAdapter {
      */
     private void deleteEmojis(Message message, String msg) {
         EmojiAddingService emojiAddingService = new EmojiAddingService();
-        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-        AlertService alertService = new AlertService();
 
         MessageChannel channel = message.getChannel();
-        List<Emoji> emojis = emojiLoadingService.loadEmojis();
         List<Integer> quotations = findOccurrences(msg, "\"");
 
         if (quotations.size() == 2) {
             String emojiStrings = msg.substring(msg.indexOf("\"") + 1, msg.lastIndexOf("\""));
             List<String> emojiList = Lists.newArrayList(Arrays.asList(emojiStrings.split(", ")));
-            List<String> missingEmojis = emojiList.stream().filter(e -> !alertService.emojiExists(e, emojis))
-                    .collect(Collectors.toList());
 
-            if (!missingEmojis.isEmpty()) {
-                alertService.alertMissingEmojis(missingEmojis, channel);
-                emojiList.removeAll(missingEmojis);
-            }
-
-            if (!emojiList.isEmpty()) {
-                emojiAddingService.removeEmojis(emojiList);
-                alertService.alertRemovedEmojis(emojiList, channel);
-            }
+            emojiAddingService.removeEmojis(emojiList, channel);
         } else if (quotations.size() == 4) {
             String emojiStrings = msg.substring(quotations.get(0) + 1, quotations.get(1));
             String keywords = msg.substring(quotations.get(2) + 1, quotations.get(3));
 
             List<String> emojiList = Lists.newArrayList(Arrays.asList(emojiStrings.split(", ")));
             List<String> keywordList = Lists.newArrayList(Arrays.asList(keywords.split(", ")));
-            List<String> missingEmojis = emojiList.stream().filter(e -> !alertService.emojiExists(e, emojis))
-                    .collect(Collectors.toList());
 
-            if (!missingEmojis.isEmpty()) {
-                alertService.alertMissingEmojis(missingEmojis, channel);
-                emojiList.removeAll(missingEmojis);
-            }
-
-            for (String keyword : keywordList) {
-                if (emojiList.stream().anyMatch(e -> !alertService.keywordExists(keyword, e, emojis))) {
-                    alertService.alertMissingKeyword(keyword, emojiList, emojis, channel);
-                }
-            }
-
-            if (!emojiList.isEmpty()) {
-                emojiAddingService.removeKeywords(emojiList, keywordList);
-                alertService.alertRemovedKeywords(keywordList, emojiList, emojis, channel);
-            }
+            emojiAddingService.removeKeywords(emojiList, keywordList, channel);
         } else {
             channel.sendMessage("Invalid input. See '" + COMMAND_HELP + "'").queue();
         }
@@ -345,10 +312,9 @@ public class DiscordListener extends ListenerAdapter {
     private void cleanXml(MessageChannel channel) {
         EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
         EmojiAddingService emojiAddingService = new EmojiAddingService();
-        AlertService alertService = new AlertService();
         List<Emoji> emojis = emojiLoadingService.loadEmojis();
 
-        List<String> duplicateEmojis = getDuplicateEmojis(emojis);
+        Set<String> duplicateEmojis = getDuplicateEmojis(emojis);
         List<String> upperCaseKeywords = getUpperCaseKeywords(emojis);
         Multimap<String, String> duplicateKeywords = getDuplicateKeywords(emojis);
 
@@ -356,31 +322,28 @@ public class DiscordListener extends ListenerAdapter {
             channel.sendMessage("No configuration errors found.").queue();
         } else {
             if (!duplicateEmojis.isEmpty()) {
-                emojiAddingService.mergeDuplicateEmojis(duplicateEmojis);
-                alertService.alertDuplicateEmojis(duplicateEmojis, channel);
+                emojiAddingService.mergeDuplicateEmojis(duplicateEmojis, channel);
                 //check again for duplicate keywords after merging emojis
                 emojis = emojiLoadingService.loadEmojis();
                 duplicateKeywords = getDuplicateKeywords(emojis);
             }
 
             if (!upperCaseKeywords.isEmpty()) {
-                emojiAddingService.setKeywordsToLowerCase();
-                alertService.alertUpperCaseKeywords(upperCaseKeywords, channel);
+                emojiAddingService.setKeywordsToLowerCase(channel);
                 //might also result in duplicate keywords so reload (E, e -> e, e)
                 emojis = emojiLoadingService.loadEmojis();
                 duplicateKeywords = getDuplicateKeywords(emojis);
             }
 
             if (!duplicateKeywords.isEmpty()) {
-                emojiAddingService.mergeDuplicateKeywords(duplicateKeywords);
-                alertService.alertDuplicateKeywords(duplicateKeywords, channel);
+                emojiAddingService.mergeDuplicateKeywords(duplicateKeywords, channel);
             }
         }
     }
 
-    private List<String> getDuplicateEmojis(List<Emoji> emojis) {
-        List<String> checkedEmojis = Lists.newArrayList();
-        List<String> duplicateEmojis = Lists.newArrayList();
+    private Set<String> getDuplicateEmojis(List<Emoji> emojis) {
+        Set<String> checkedEmojis = Sets.newHashSet();
+        Set<String> duplicateEmojis = Sets.newHashSet();
 
         for (Emoji emoji : emojis) {
             String emojiValue = emoji.getEmojiValue();
@@ -388,9 +351,7 @@ public class DiscordListener extends ListenerAdapter {
             //if emoji value already exists add it to duplicates but only once
             if (!checkedEmojis.contains(emojiValue)) {
                 checkedEmojis.add(emojiValue);
-            } else if (!duplicateEmojis.contains(emojiValue)) {
-                duplicateEmojis.add(emojiValue);
-            }
+            } else duplicateEmojis.add(emojiValue);
         }
 
         return duplicateEmojis;

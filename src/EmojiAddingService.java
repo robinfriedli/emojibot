@@ -1,9 +1,12 @@
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import net.dv8tion.jda.core.entities.MessageChannel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import javax.annotation.Nullable;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -11,30 +14,46 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class EmojiAddingService {
 
     private EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
+    private AlertService alertService = new AlertService();
 
-    public void addEmojis(String[] emojis) {
+    public void addEmojis(String[] emojis, @Nullable MessageChannel channel) {
         Document doc = emojiLoadingService.getDocument();
         Element rootElem = doc.getDocumentElement();
+
+        List<String> addedEmojis = Lists.newArrayList();
+        List<String> existingEmojis = Lists.newArrayList();
 
         for (String emoji : emojis) {
             if (!emojiExists(doc, emoji)) {
                 Element emojiElem = doc.createElement("emoji");
                 emojiElem.setAttribute("value", emoji);
                 rootElem.appendChild(emojiElem);
+
+                addedEmojis.add(emoji);
+            } else {
+                existingEmojis.add(emoji);
             }
         }
 
         writeToFile(doc);
+        alertService.alertAddedEmojis(addedEmojis, existingEmojis, channel);
     }
 
-    public void addEmojis(String[] emojis, String[] keywords, String[] replaceTags) {
+    public void addEmojis(String[] emojis, String[] keywords, String[] replaceTags, @Nullable MessageChannel channel) {
         Document doc = emojiLoadingService.getDocument();
         Element rootElem = doc.getDocumentElement();
+
+        List<String> addedEmojis = Lists.newArrayList();
+        List<String> existingEmojis = Lists.newArrayList();
+        Multimap<String, String> addedKeywords = HashMultimap.create();
+        Multimap<String, String> existingKeywords = HashMultimap.create();
+        Multimap<String, String> adjustedKeywords = HashMultimap.create();
 
         for (String emoji : emojis) {
             Element emojiElem;
@@ -43,10 +62,17 @@ public class EmojiAddingService {
             if (!emojiExists(doc, emoji)) {
                 emojiElem = doc.createElement("emoji");
                 emojiElem.setAttribute("value", emoji);
+
+                addedEmojis.add(emoji);
             } else {
                 emojiElem = getEmojiElem(doc, emoji);
+
+                existingEmojis.add(emoji);
             }
 
+            List<String> addedKeywordsForEmoji = Lists.newArrayList();
+            List<String> adjustedKeywordsForEmoji = Lists.newArrayList();
+            List<String> existingKeywordsForEmoji = Lists.newArrayList();
             for (int i = 0; i < keywords.length; i++) {
                 Element keywordElem;
 
@@ -54,41 +80,61 @@ public class EmojiAddingService {
                 // and adjust replace flag
                 if (!keywordExists(emojiElem, keywords[i])) {
                     keywordElem = doc.createElement("keyword");
+                    keywordElem.setAttribute("replace", replaceTags[i]);
+                    keywordElem.setTextContent(keywords[i]);
+
+                    addedKeywordsForEmoji.add(keywords[i]);
                 } else {
                     keywordElem = getKeywordElem(emojiElem, keywords[i]);
-                }
 
-                keywordElem.setAttribute("replace", replaceTags[i]);
-                keywordElem.setTextContent(keywords[i]);
+                    if (!keywordElem.getAttribute("replace").equals(replaceTags[i])) {
+                        keywordElem.setAttribute("replace", replaceTags[i]);
+
+                        adjustedKeywordsForEmoji.add(keywords[i]);
+                    } else {
+                        existingKeywordsForEmoji.add(keywords[i]);
+                    }
+                }
 
                 emojiElem.appendChild(keywordElem);
             }
+            addedKeywordsForEmoji.forEach(k -> addedKeywords.put(emoji, k));
+            adjustedKeywordsForEmoji.forEach(k -> adjustedKeywords.put(emoji, k));
+            existingKeywordsForEmoji.forEach(k -> existingKeywords.put(emoji, k));
 
             rootElem.appendChild(emojiElem);
         }
 
         writeToFile(doc);
+        alertService.alertAddedEmojis(addedEmojis, existingEmojis, addedKeywords, adjustedKeywords, existingKeywords, channel);
     }
 
-    public void removeEmojis(List<String> emojisToRemove) {
+    public void removeEmojis(List<String> emojisToRemove, @Nullable MessageChannel channel) {
         Document doc = emojiLoadingService.getDocument();
         Element rootElem = doc.getDocumentElement();
         List<Element> emojiElems = getEmojiElems(doc, emojisToRemove);
+        List<String> removedEmojis = Lists.newArrayList();
 
         for (Element emoji : emojiElems) {
             String emojiValue = emoji.getAttribute("value");
 
             if (emojisToRemove.contains(emojiValue)) {
                 rootElem.removeChild(emoji);
+
+                emojisToRemove.remove(emojiValue);
+                removedEmojis.add(emojiValue);
             }
         }
 
         writeToFile(doc);
+        alertService.alertRemovedEmojis(removedEmojis, emojisToRemove, channel);
     }
 
-    public void removeKeywords(List<String> emojis, List<String> keywordsToRemove) {
+    public void removeKeywords(List<String> emojis, List<String> keywordsToRemove, @Nullable MessageChannel channel) {
         Document doc = emojiLoadingService.getDocument();
         List<Element> emojiElems = getEmojiElems(doc, emojis);
+        Multimap<String, String> removedKeywords = HashMultimap.create();
+        Multimap<String, String> missingKeywords = HashMultimap.create();
 
         for (Element emoji : emojiElems) {
             String emojiValue = emoji.getAttribute("value");
@@ -96,25 +142,38 @@ public class EmojiAddingService {
             if (emojis.contains(emojiValue)) {
                 List<Element> keywordElems = getKeywordElems(emoji, keywordsToRemove);
 
+                List<String> keywordsOnEmoji = Lists.newArrayList(keywordsToRemove);
                 for (Element keyword : keywordElems) {
                     String keywordValue = keyword.getTextContent();
 
                     if (keywordsToRemove.contains(keywordValue)) {
                         emoji.removeChild(keyword);
+
+                        keywordsOnEmoji.remove(keywordValue);
+                        removedKeywords.put(emojiValue, keywordValue);
                     }
                 }
+
+                //if keywordsOnEmoji is not empty that means not all selected keywords have been found on this emoji
+                if (!keywordsOnEmoji.isEmpty()) {
+                    keywordsOnEmoji.forEach(k -> missingKeywords.put(emojiValue, k));
+                }
             }
+
+            emojis.remove(emojiValue);
         }
 
         writeToFile(doc);
+        alertService.alertRemovedKeywords(emojis, removedKeywords, missingKeywords, channel);
     }
 
-    public void mergeDuplicateEmojis(List<String> duplicateEmojis) {
+    public void mergeDuplicateEmojis(Set<String> duplicateEmojis, @Nullable MessageChannel channel) {
         Document doc = emojiLoadingService.getDocument();
         Element rootElem = doc.getDocumentElement();
 
         NodeList emojis = doc.getElementsByTagName("emoji");
         List<Element> newEmojis = Lists.newArrayList();
+        List<String> mergedEmojis = Lists.newArrayList();
 
         //create new emoji elements for each duplicate emoji
         for (String duplicateEmoji : duplicateEmojis) {
@@ -155,15 +214,18 @@ public class EmojiAddingService {
             }
 
             rootElem.appendChild(newEmoji);
+            mergedEmojis.add(emojiValue);
         }
 
         writeToFile(doc);
+        alertService.alertMergedEmojis(mergedEmojis, channel);
     }
 
-    public void mergeDuplicateKeywords(Multimap<String, String> emojisWithDuplicateKeywords) {
+    public void mergeDuplicateKeywords(Multimap<String, String> emojisWithDuplicateKeywords, @Nullable MessageChannel channel) {
         Document doc = emojiLoadingService.getDocument();
 
         List<Element> emojis = nodeListToElementList(doc.getElementsByTagName("emoji"));
+        Multimap<String, String> mergedKeywords = HashMultimap.create();
 
         for (String emoji : emojisWithDuplicateKeywords.keys()) {
             //load the emoji element for the current emoji for which we want to merge duplicate keywords
@@ -173,7 +235,7 @@ public class EmojiAddingService {
                 Element emojiElem = emojiElems.get(0);
                 List<Element> keywordElems = nodeListToElementList(emojiElem.getElementsByTagName("keyword"));
 
-                //loop over the different pairs of duplicate keywords on current emoji
+                //loop over the different duplicate keyword values on current emoji
                 for (String keyword : emojisWithDuplicateKeywords.get(emoji)) {
                     //load all duplicates for the current keyword
                     List<Element> selectedKeywords = keywordElems.stream().filter(k -> k.getTextContent().equals(keyword))
@@ -191,6 +253,8 @@ public class EmojiAddingService {
                     newKeyword.setAttribute("replace", isReplace.toString());
                     newKeyword.setTextContent(keyword);
                     emojiElem.appendChild(newKeyword);
+
+                    mergedKeywords.put(emoji, keyword);
                 }
             } else if (emojiElems.size() > 1) {
                 throw new IllegalStateException("More than one emoji found for value " + emoji + ". Keyword cleaning failed.");
@@ -200,21 +264,26 @@ public class EmojiAddingService {
         }
 
         writeToFile(doc);
+        alertService.alertMergedKeywords(mergedKeywords, channel);
     }
 
-    public void setKeywordsToLowerCase() {
+    public void setKeywordsToLowerCase(@Nullable MessageChannel channel) {
         Document doc = emojiLoadingService.getDocument();
         List<Element> keywordElems = nodeListToElementList(doc.getElementsByTagName("keyword"));
+        List<String> changedKeywords = Lists.newArrayList();
 
         for (Element keywordElem : keywordElems) {
             String keyword = keywordElem.getTextContent();
 
             if (!keyword.equals(keyword.toLowerCase())) {
                 keywordElem.setTextContent(keyword.toLowerCase());
+
+                changedKeywords.add(keyword);
             }
         }
 
         writeToFile(doc);
+        alertService.alertUpperCaseKeywords(changedKeywords, channel);
     }
 
     private boolean emojiExists(Document doc, String emojiString) {
