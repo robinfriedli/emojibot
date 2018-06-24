@@ -1,3 +1,6 @@
+package util;
+
+import api.StringListImpl;
 import com.google.common.collect.Multimap;
 import net.dv8tion.jda.core.entities.MessageChannel;
 

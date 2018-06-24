@@ -1,3 +1,7 @@
+package core;
+
+import api.Emoji;
+import api.Keyword;
 import com.google.common.collect.Lists;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

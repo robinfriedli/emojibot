@@ -1,3 +1,9 @@
+package core;
+
+import api.Emoji;
+import api.Keyword;
+import api.StringList;
+import api.StringListImpl;
 import com.google.common.collect.Lists;
 
 import java.util.Arrays;

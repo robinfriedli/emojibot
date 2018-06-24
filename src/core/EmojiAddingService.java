@@ -1,3 +1,5 @@
+package core;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -5,6 +7,7 @@ import net.dv8tion.jda.core.entities.MessageChannel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import util.AlertService;
 
 import javax.annotation.Nullable;
 import javax.xml.transform.Transformer;

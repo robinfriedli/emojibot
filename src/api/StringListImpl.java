@@ -1,3 +1,5 @@
+package api;
+
 import com.google.common.collect.Lists;
 
 import java.util.Arrays;
@@ -6,7 +8,7 @@ import java.util.List;
 
 public class StringListImpl implements StringList {
 
-    List<String> values;
+    private List<String> values;
 
     public StringListImpl(List<String> stringList) {
         this.values = stringList;

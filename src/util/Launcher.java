@@ -1,3 +1,8 @@
+package util;
+
+import core.EmojiLoadingService;
+import core.TextManipulationService;
+
 import java.util.Scanner;
 
 public class Launcher {

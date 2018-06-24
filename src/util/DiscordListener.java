@@ -1,7 +1,15 @@
+package util;
+
+import api.Emoji;
+import api.Keyword;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import core.EmojiAddingService;
+import core.EmojiLoadingService;
+import core.TextLoadingService;
+import core.TextManipulationService;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Message;
