@@ -17,7 +17,8 @@ public class TextLoadingService {
             e.printStackTrace();
         }
 
-        throw new IllegalStateException("Token loading failed");
+        throw new IllegalStateException("Token loading failed. " +
+                "You need to create a file called token.txt with the discord token for your bot within the resources directory");
     }
 
     public static String loadHelp() {

@@ -74,7 +74,3 @@ ________________________________________________________________________________
 ## Setup:
 
 Create a file called token.txt within the resources directory containing the token for your discord bot.
-
-Download the JDA jar from https://github.com/DV8FromTheWorld/JDA
-
-Also requires the google guava library
