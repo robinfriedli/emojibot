@@ -22,11 +22,7 @@ public class AlertService {
                     .append(System.lineSeparator());
         }
 
-        if (channel != null) {
-            channel.sendMessage(builder.toString()).queue();
-        } else {
-            System.out.print(builder.toString());
-        }
+       send(builder.toString(), channel);
     }
 
     public void alertRemovedKeywords(List<String> missingEmojis,
@@ -56,19 +52,11 @@ public class AlertService {
             }
         }
 
-        if (channel != null) {
-            channel.sendMessage(builder.toString()).queue();
-        } else {
-            System.out.print(builder.toString());
-        }
+        send(builder.toString(), channel);
     }
 
     public void alertAddedEmojis(List<String> addedEmojis, List<String> existingEmojis, @Nullable MessageChannel channel) {
-        if (channel != null) {
-            channel.sendMessage(buildAddedEmojisAlertMessage(addedEmojis, existingEmojis)).queue();
-        } else {
-            System.out.print(buildAddedEmojisAlertMessage(addedEmojis, existingEmojis));
-        }
+        send(buildAddedEmojisAlertMessage(addedEmojis, existingEmojis), channel);
     }
 
     public void alertAddedEmojis(List<String> addedEmojis,
@@ -79,47 +67,43 @@ public class AlertService {
                                  @Nullable MessageChannel channel) {
         StringBuilder builder = new StringBuilder();
 
-        builder.append(buildAddedEmojisAlertMessage(addedEmojis, existingEmojis));
-
-        if (!addedKeywords.isEmpty()) {
-            for (String emoji : addedKeywords.keySet()) {
-                builder.append("keywords ").append(StringListImpl.create(addedKeywords.get(emoji)).toSeparatedString())
-                        .append(" added to emojis ").append(emoji)
-                        .append(System.lineSeparator());
-            }
-        }
-
-        if (!adjustedKeywords.isEmpty()) {
-            for (String emoji : adjustedKeywords.keySet()) {
-                builder.append("replace value of keywords ").append(StringListImpl.create(adjustedKeywords.get(emoji)))
-                        .append(" adjusted on emojis ").append(emoji)
-                        .append(System.lineSeparator());
-            }
-        }
-
-        if (!existingKeywords.isEmpty()) {
-            for (String emoji : existingKeywords.keySet()) {
-                builder.append("keywords ").append(StringListImpl.create(existingKeywords.get(emoji)).toSeparatedString())
-                        .append(" already exist on emojis ").append(emoji)
-                        .append(System.lineSeparator());
-            }
-        }
-
-        if (channel != null) {
-            channel.sendMessage(builder.toString()).queue();
+        if (addedKeywords.isEmpty() && adjustedKeywords.isEmpty()) {
+            builder.append("All emojis and keywords already exist as is. No changes have been made.");
         } else {
-            System.out.print(builder.toString());
+            builder.append(buildAddedEmojisAlertMessage(addedEmojis, existingEmojis));
+
+            if (!addedKeywords.isEmpty()) {
+                for (String emoji : addedKeywords.keySet()) {
+                    builder.append("keywords ").append(StringListImpl.create(addedKeywords.get(emoji)).toSeparatedString())
+                            .append(" added to emoji ").append(emoji)
+                            .append(System.lineSeparator());
+                }
+            }
+
+            if (!adjustedKeywords.isEmpty()) {
+                for (String emoji : adjustedKeywords.keySet()) {
+                    builder.append("replace value of keywords ").append(StringListImpl.create(adjustedKeywords.get(emoji)))
+                            .append(" adjusted on emoji ").append(emoji)
+                            .append(System.lineSeparator());
+                }
+            }
+
+            if (!existingKeywords.isEmpty()) {
+                for (String emoji : existingKeywords.keySet()) {
+                    builder.append("keywords ").append(StringListImpl.create(existingKeywords.get(emoji)).toSeparatedString())
+                            .append(" already exist on emoji ").append(emoji)
+                            .append(System.lineSeparator());
+                }
+            }
         }
+
+        send(builder.toString(), channel);
     }
 
     public void alertMergedEmojis(List<String> mergedEmojis, @Nullable MessageChannel channel) {
         String message = String.format("duplicate emojis: %s merged", StringListImpl.create(mergedEmojis).toSeparatedString());
 
-        if (channel != null) {
-            channel.sendMessage(message).queue();
-        } else {
-            System.out.print(message);
-        }
+        send(message, channel);
     }
 
     public void alertMergedKeywords(Multimap<String, String> emojisWithDuplicateKeywords, @Nullable MessageChannel channel) {
@@ -131,18 +115,15 @@ public class AlertService {
                     .append(System.lineSeparator());
         }
 
-        if (channel != null) {
-            channel.sendMessage(builder.toString()).queue();
-        } else {
-            System.out.print(builder.toString());
-        }
+        send(builder.toString(), channel);
     }
 
-    public void alertUpperCaseKeywords(List<String> upperCaseKeywords, MessageChannel channel) {
-        channel.sendMessage("Keywords: "
+    public void alertUpperCaseKeywords(List<String> upperCaseKeywords, @Nullable MessageChannel channel) {
+        String message = "Keywords: "
                 + StringListImpl.create(upperCaseKeywords).toSeparatedString()
-                + " changed to lower case")
-                .queue();
+                + " changed to lower case";
+
+        send(message, channel);
     }
 
     private String buildAddedEmojisAlertMessage(List<String> addedEmojis, List<String> existingEmojis) {
@@ -151,14 +132,24 @@ public class AlertService {
         if (!addedEmojis.isEmpty()) {
             builder.append("emojis added: ").append(StringListImpl.create(addedEmojis).toSeparatedString())
                     .append(System.lineSeparator());
-        }
 
-        if (!existingEmojis.isEmpty()) {
-            builder.append("emojis already exist: ").append(StringListImpl.create(existingEmojis).toSeparatedString())
-                    .append(System.lineSeparator());
+            if (!existingEmojis.isEmpty()) {
+                builder.append("emojis already exist: ").append(StringListImpl.create(existingEmojis).toSeparatedString())
+                        .append(System.lineSeparator());
+            }
+        } else {
+            builder.append("All emojis already exist.");
         }
 
         return builder.toString();
+    }
+
+    private void send(String message, @Nullable MessageChannel channel) {
+        if (channel != null) {
+            channel.sendMessage(message).queue();
+        } else {
+            System.out.print(message);
+        }
     }
 
 }

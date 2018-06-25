@@ -73,9 +73,6 @@ public class EmojiAddingService {
                 existingEmojis.add(emoji);
             }
 
-            List<String> addedKeywordsForEmoji = Lists.newArrayList();
-            List<String> adjustedKeywordsForEmoji = Lists.newArrayList();
-            List<String> existingKeywordsForEmoji = Lists.newArrayList();
             for (int i = 0; i < keywords.length; i++) {
                 Element keywordElem;
 
@@ -86,24 +83,21 @@ public class EmojiAddingService {
                     keywordElem.setAttribute("replace", replaceTags[i]);
                     keywordElem.setTextContent(keywords[i]);
 
-                    addedKeywordsForEmoji.add(keywords[i]);
+                    addedKeywords.put(emoji, keywords[i]);
                 } else {
                     keywordElem = getKeywordElem(emojiElem, keywords[i]);
 
                     if (!keywordElem.getAttribute("replace").equals(replaceTags[i])) {
                         keywordElem.setAttribute("replace", replaceTags[i]);
 
-                        adjustedKeywordsForEmoji.add(keywords[i]);
+                        adjustedKeywords.put(emoji, keywords[i]);
                     } else {
-                        existingKeywordsForEmoji.add(keywords[i]);
+                        existingKeywords.put(emoji, keywords[i]);
                     }
                 }
 
                 emojiElem.appendChild(keywordElem);
             }
-            addedKeywordsForEmoji.forEach(k -> addedKeywords.put(emoji, k));
-            adjustedKeywordsForEmoji.forEach(k -> adjustedKeywords.put(emoji, k));
-            existingKeywordsForEmoji.forEach(k -> existingKeywords.put(emoji, k));
 
             rootElem.appendChild(emojiElem);
         }
