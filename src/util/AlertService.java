@@ -22,7 +22,7 @@ public class AlertService {
                     .append(System.lineSeparator());
         }
 
-       send(builder.toString(), channel);
+        send(builder.toString(), channel);
     }
 
     public void alertRemovedKeywords(List<String> missingEmojis,
@@ -144,11 +144,11 @@ public class AlertService {
         return builder.toString();
     }
 
-    private void send(String message, @Nullable MessageChannel channel) {
+    public void send(String message, @Nullable MessageChannel channel) {
         if (channel != null) {
             channel.sendMessage(message).queue();
         } else {
-            System.out.print(message);
+            System.out.println(message);
         }
     }
 
