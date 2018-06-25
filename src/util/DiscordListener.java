@@ -127,9 +127,15 @@ public class DiscordListener extends ListenerAdapter {
 
         String input = msg.substring(COMMAND_TRANSFORM.length() + 1, msg.length());
         StringBuilder response = new StringBuilder();
+        boolean randFormat = false;
+
+        if (input.startsWith("-r ")) {
+            randFormat = true;
+            input = input.substring(3, input.length());
+        }
 
         EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-        TextManipulationService service = new TextManipulationService(false, emojiLoadingService.loadEmojis());
+        TextManipulationService service = new TextManipulationService(randFormat, emojiLoadingService.loadEmojis());
 
         response.append("**").append(message.getAuthor().getName()).append(":").append("**").append(System.lineSeparator())
                 .append(service.getOutput(input));

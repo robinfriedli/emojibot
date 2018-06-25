@@ -15,7 +15,7 @@ ________________________________________________________________________________
 ### Transform text into emojitext:
 
     Syntax:
-    `e!e text`
+    `e!e text` or `e!e -r text` to enable random markdown formatting
 
 ### List all saved emojis:
 

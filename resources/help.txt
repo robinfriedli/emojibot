@@ -6,7 +6,7 @@ Adds emojis to text.
 
 ____________________________________________________________________________________________________________________
 
-Transform text into emojitext: e!e text
+Transform text into emojitext: 'e!e text' or 'e!e -r text' to enable random markdown formatting
 
 List all saved emojis: e!list
 
