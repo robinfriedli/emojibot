@@ -4,9 +4,9 @@ import api.Emoji;
 import api.Keyword;
 import api.StringList;
 import api.StringListImpl;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
@@ -23,7 +23,10 @@ public class TextManipulationService {
     private final List<Emoji> emojis;
     private final List<Keyword> keywords;
 
-    private static List<String> wrappers = Lists.newArrayList(Arrays.asList("_", "*", "~", "```"));
+    private static List<String> wrappersStart =
+            ImmutableList.of("_", "**", "***", "__", "__*", "__**", "__***", "~~");
+    private static List<String> wrappersEnd =
+            ImmutableList.of("_", "**", "***", "__", "*__", "**__", "***__", "~~");
 
     public TextManipulationService(boolean randFormat, List<Emoji> emojis) {
         this.randFormat = randFormat;
@@ -151,9 +154,10 @@ public class TextManipulationService {
 
     private String applyRandomFormat(String[] words) {
         for (int i = 0; i < words.length; i++) {
-            int rand = ThreadLocalRandom.current().nextInt(0, wrappers.size());
-            String randomWrapper = wrappers.get(rand);
-            words[i] = randomWrapper + words[i] + randomWrapper;
+            int rand = ThreadLocalRandom.current().nextInt(0, wrappersStart.size());
+            String randomWrapperStart = wrappersStart.get(rand);
+            String randomWrapperEnd = wrappersEnd.get(rand);
+            words[i] = randomWrapperStart + words[i] + randomWrapperEnd;
         }
 
         return String.join(" ", words);
