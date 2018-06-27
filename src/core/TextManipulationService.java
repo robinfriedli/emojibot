@@ -7,6 +7,7 @@ import api.StringListImpl;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
@@ -37,7 +38,7 @@ public class TextManipulationService {
 
     public String getOutput(String input) {
         input = applyKeywords(input);
-        if (randFormat) input = applyRandomFormat(input.split(" "));
+        if (randFormat) input = applyRandomFormat(input);
 
         return filterOutput(input);
     }
@@ -144,7 +145,7 @@ public class TextManipulationService {
         for (int pos : spacePositions) {
             int rand = ThreadLocalRandom.current().nextInt(0, emojis.size());
             String emojiSpace = String.format(" %s ", emojis.get(rand).getEmojiValue());
-            strings.replaceValueAt(pos, emojiSpace);
+            strings.set(pos, emojiSpace);
         }
 
         input = strings.toString();
@@ -152,15 +153,28 @@ public class TextManipulationService {
         return input;
     }
 
-    private String applyRandomFormat(String[] words) {
-        for (int i = 0; i < words.length; i++) {
-            int rand = ThreadLocalRandom.current().nextInt(0, wrappersStart.size());
-            String randomWrapperStart = wrappersStart.get(rand);
-            String randomWrapperEnd = wrappersEnd.get(rand);
-            words[i] = randomWrapperStart + words[i] + randomWrapperEnd;
+    private String applyRandomFormat(String input) {
+        StringList words = StringListImpl.createWords(input);
+
+        for (int i = 0; i < words.size(); i++) {
+            //list also contains spaces and interpunctions so we need to check if this is indeed a word
+            String word = words.get(i);
+            if (isWord(word)) {
+                int rand = ThreadLocalRandom.current().nextInt(0, wrappersStart.size());
+                String randomWrapperStart = wrappersStart.get(rand);
+                String randomWrapperEnd = wrappersEnd.get(rand);
+
+                word = randomWrapperStart + word + randomWrapperEnd;
+                words.set(i, word);
+            }
         }
 
-        return String.join(" ", words);
+        return words.toString();
+    }
+
+    private boolean isWord(String s) {
+        Character[] chars = s.chars().mapToObj(c -> (char) c).toArray(Character[]::new);
+        return Arrays.stream(chars).allMatch(Character::isLetter);
     }
 
 }
