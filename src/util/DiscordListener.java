@@ -2,6 +2,8 @@ package util;
 
 import api.Emoji;
 import api.Keyword;
+import api.StringList;
+import api.StringListImpl;
 import com.google.common.collect.Lists;
 import core.EmojiLoadingService;
 import core.TextLoadingService;
@@ -14,6 +16,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import javax.security.auth.login.LoginException;
+import java.util.Arrays;
 import java.util.List;
 
 public class DiscordListener extends ListenerAdapter {
@@ -140,11 +143,70 @@ public class DiscordListener extends ListenerAdapter {
         response.append("**").append(message.getAuthor().getName()).append(":").append("**").append(System.lineSeparator())
                 .append(service.getOutput(input));
 
-        try {
-            channel.sendMessage(response.toString()).queue();
-        } catch (IllegalArgumentException e) {
-            channel.sendMessage(e.getMessage()).queue();
+        String output = response.toString();
+        if (output.length() < 2000) {
+            channel.sendMessage(output).queue();
+        } else {
+            List<String> outputParts = separateMessage(output);
+            for (String part : outputParts) {
+                channel.sendMessage(part).queue();
+            }
         }
+    }
+
+    private List<String> separateMessage(String message) {
+        List<String> outputParts = Lists.newArrayList();
+        //first split the message into paragraphs (Lists.newArrayList() because Arrays.asList returns immutable list)
+        List<String> paragraphs = Lists.newArrayList(Arrays.asList(message.split("\n")));
+
+        for (int i = 0; i < paragraphs.size(); i++) {
+            String paragraph = paragraphs.get(i);
+            if (paragraph.length() < 2000) {
+                outputParts.add(paragraph);
+                if (i < paragraphs.size() - 1) outputParts.add(System.lineSeparator());
+            } else {
+                //if the paragraph is too long separate into sentences
+                StringList sentences = StringListImpl.createSentences(paragraph);
+                for (String sentence : sentences) {
+                    //check if sentence is shorter than 2000 characters, else split into words
+                    if (sentence.length() < 2000) {
+                        //since we don't want to send a message for each sentence fill the same part until full
+                        outputParts = fillParts(outputParts, sentence);
+                    } else {
+                        //if sentence is longer than 2000 characters split into words
+                        StringList words = StringListImpl.createWords(sentence);
+
+                        for (String word : words) {
+                            if (word.length() < 2000) {
+                                outputParts = fillParts(outputParts, word);
+                            } else {
+                                //this should never happen since discord does not allow you to send messages longer than
+                                // 2000 characters and if there are no spaces there are no emojis to make the text longer
+                                StringList chars = StringListImpl.charsToList(word);
+                                for (String charString : chars) {
+                                    outputParts = fillParts(outputParts, charString);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return outputParts;
+    }
+
+    private List<String> fillParts(List<String> outputParts, String s) {
+        if (outputParts.isEmpty()) outputParts.add("");
+        int currentPart = outputParts.size() - 1;
+
+        if (outputParts.get(currentPart).length() + s.length() < 2000) {
+            outputParts.set(currentPart, outputParts.get(currentPart) + s);
+        } else {
+            outputParts.add(s);
+        }
+
+        return outputParts;
     }
 
     /**
