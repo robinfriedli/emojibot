@@ -162,8 +162,10 @@ public class DiscordListener extends ListenerAdapter {
         for (int i = 0; i < paragraphs.size(); i++) {
             String paragraph = paragraphs.get(i);
             if (paragraph.length() < 2000) {
-                outputParts.add(paragraph);
-                if (i < paragraphs.size() - 1) outputParts.add(System.lineSeparator());
+                //check that paragraph is not an empty line
+                if (notEmpty(paragraph)) {
+                    outputParts.add(paragraph);
+                }
             } else {
                 //if the paragraph is too long separate into sentences
                 StringList sentences = StringListImpl.createSentences(paragraph);
@@ -194,6 +196,11 @@ public class DiscordListener extends ListenerAdapter {
         }
 
         return outputParts;
+    }
+
+    private boolean notEmpty(String paragraph) {
+        Character[] chars = paragraph.chars().mapToObj(c -> (char) c).toArray(Character[]::new);
+        return Arrays.stream(chars).anyMatch(Character::isLetter);
     }
 
     private List<String> fillParts(List<String> outputParts, String s) {
