@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 
 import java.text.BreakIterator;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class StringListImpl implements StringList {
 
@@ -190,5 +191,9 @@ public class StringListImpl implements StringList {
         }
 
         return create(charsAsString);
+    }
+
+    public Stream<String> stream() {
+        return values.stream();
     }
 }

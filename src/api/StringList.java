@@ -2,6 +2,7 @@ package api;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 public interface StringList extends Iterable<String> {
 
@@ -115,5 +116,10 @@ public interface StringList extends Iterable<String> {
      * @param value
      */
     void set(int index, String value);
+
+    /**
+     * @return stream for StringList values
+     */
+    Stream<String> stream();
 
 }
