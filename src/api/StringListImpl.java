@@ -142,6 +142,18 @@ public class StringListImpl implements StringList {
         return create(stringList);
     }
 
+    public static StringList separateString(String string, String regex) {
+        String[] strings = string.split(regex);
+        StringList stringList = new StringListImpl(Lists.newArrayList());
+
+        for (int i = 0; i < strings.length; i++) {
+            stringList.add(strings[i]);
+            if (i < strings.length - 1) stringList.add(regex);
+        }
+
+        return stringList;
+    }
+
     public static StringList createSentences(String input) {
         List<String> sentences = Lists.newArrayList();
 

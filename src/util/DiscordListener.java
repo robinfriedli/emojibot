@@ -157,18 +157,19 @@ public class DiscordListener extends ListenerAdapter {
     private List<String> separateMessage(String message) {
         List<String> outputParts = Lists.newArrayList();
         //first split the message into paragraphs (Lists.newArrayList() because Arrays.asList returns immutable list)
-        List<String> paragraphs = Lists.newArrayList(Arrays.asList(message.split("\n")));
+        StringList paragraphs = StringListImpl.separateString(message, "\n");
 
         for (int i = 0; i < paragraphs.size(); i++) {
             String paragraph = paragraphs.get(i);
-            if (paragraph.length() < 2000) {
+            if (paragraph.length() + System.lineSeparator().length() < 2000) {
                 //check that paragraph is not an empty line
                 if (notEmpty(paragraph)) {
+                    if (i < paragraphs.size() - 1) paragraph = paragraph + System.lineSeparator();
                     outputParts.add(paragraph);
                 }
             } else {
                 //if the paragraph is too long separate into sentences
-                StringList sentences = StringListImpl.createSentences(paragraph);
+                StringList sentences = StringListImpl.separateString(paragraph, "\\. ");
                 for (String sentence : sentences) {
                     //check if sentence is shorter than 2000 characters, else split into words
                     if (sentence.length() < 2000) {
@@ -176,7 +177,7 @@ public class DiscordListener extends ListenerAdapter {
                         outputParts = fillParts(outputParts, sentence);
                     } else {
                         //if sentence is longer than 2000 characters split into words
-                        StringList words = StringListImpl.createWords(sentence);
+                        StringList words = StringListImpl.separateString(sentence, " ");
 
                         for (String word : words) {
                             if (word.length() < 2000) {
