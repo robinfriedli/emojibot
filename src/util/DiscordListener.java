@@ -10,6 +10,7 @@ import core.TextLoadingService;
 import core.TextManipulationService;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
+import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -40,7 +41,8 @@ public class DiscordListener extends ListenerAdapter {
             new JDABuilder(AccountType.BOT)
                     .setToken(TextLoadingService.loadToken())
                     .addEventListener(this)
-                    .buildBlocking();
+                    .buildBlocking()
+                    .getPresence().setGame(Game.playing(COMMAND_HELP));
         } catch (LoginException | InterruptedException e) {
             e.printStackTrace();
         }
