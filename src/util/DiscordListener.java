@@ -144,7 +144,7 @@ public class DiscordListener extends ListenerAdapter {
                 .append(service.getOutput(input));
 
         String output = response.toString();
-        if (output.length() < 2000) {
+        if (output.length() < 1000) {
             channel.sendMessage(output).queue();
         } else {
             List<String> outputParts = separateMessage(output);
@@ -161,7 +161,7 @@ public class DiscordListener extends ListenerAdapter {
 
         for (int i = 0; i < paragraphs.size(); i++) {
             String paragraph = paragraphs.get(i);
-            if (paragraph.length() + System.lineSeparator().length() < 2000) {
+            if (paragraph.length() + System.lineSeparator().length() < 1000) {
                 //check that paragraph is not an empty line
                 if (notEmpty(paragraph)) {
                     if (i < paragraphs.size() - 1) paragraph = paragraph + System.lineSeparator();
@@ -172,7 +172,7 @@ public class DiscordListener extends ListenerAdapter {
                 StringList sentences = StringListImpl.separateString(paragraph, "\\. ");
                 for (String sentence : sentences) {
                     //check if sentence is shorter than 2000 characters, else split into words
-                    if (sentence.length() < 2000) {
+                    if (sentence.length() < 1000) {
                         //since we don't want to send a message for each sentence fill the same part until full
                         outputParts = fillParts(outputParts, sentence);
                     } else {
@@ -180,7 +180,7 @@ public class DiscordListener extends ListenerAdapter {
                         StringList words = StringListImpl.separateString(sentence, " ");
 
                         for (String word : words) {
-                            if (word.length() < 2000) {
+                            if (word.length() < 1000) {
                                 outputParts = fillParts(outputParts, word);
                             } else {
                                 //this should never happen since discord does not allow you to send messages longer than
@@ -208,7 +208,7 @@ public class DiscordListener extends ListenerAdapter {
         if (outputParts.isEmpty()) outputParts.add("");
         int currentPart = outputParts.size() - 1;
 
-        if (outputParts.get(currentPart).length() + s.length() < 2000) {
+        if (outputParts.get(currentPart).length() + s.length() < 1000) {
             outputParts.set(currentPart, outputParts.get(currentPart) + s);
         } else {
             outputParts.add(s);
