@@ -1,9 +1,6 @@
 package util;
 
-import api.Emoji;
-import api.Keyword;
-import api.StringList;
-import api.StringListImpl;
+import api.*;
 import com.google.common.collect.Lists;
 import core.EmojiLoadingService;
 import core.TextLoadingService;
@@ -11,6 +8,7 @@ import core.TextManipulationService;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -55,15 +53,15 @@ public class DiscordListener extends ListenerAdapter {
             String msg = message.getContentDisplay();
 
             if (msg.startsWith(COMMAND_TRANSFORM)) {
-                transformText(event, message, msg);
+                transformText(event.getGuild(), message, msg);
             }
 
             if (msg.startsWith(COMMAND_ADD)) {
-                commandHandler.saveEmojis(msg, message.getChannel());
+                commandHandler.saveEmojis(msg, message.getChannel(), event.getGuild());
             }
 
             if (msg.startsWith(COMMAND_RM)) {
-                commandHandler.deleteEmojis(msg, message.getChannel());
+                commandHandler.deleteEmojis(msg, message.getChannel(), event.getGuild());
             }
 
             //displays help.txt file
@@ -77,7 +75,7 @@ public class DiscordListener extends ListenerAdapter {
             }
 
             if (msg.startsWith(COMMAND_SEARCH)) {
-                searchQuery(message, msg);
+                searchQuery(message, msg, event.getGuild());
             }
 
             if (msg.equals(COMMAND_CLEAN)) {
@@ -91,11 +89,11 @@ public class DiscordListener extends ListenerAdapter {
      * Replaces spaces with random emojis, replaces B with 🅱 and replaces keywords with emoji or adds emoji after keyword
      * depending on replace is true or false for corresponding keyword
      *
-     * @param event
+     * @param guild
      * @param message
      * @param msg
      */
-    private void transformText(MessageReceivedEvent event, Message message, String msg) {
+    private void transformText(Guild guild, Message message, String msg) {
         MessageChannel channel = message.getChannel();
 
         /*
@@ -140,7 +138,12 @@ public class DiscordListener extends ListenerAdapter {
         }
 
         EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-        TextManipulationService service = new TextManipulationService(randFormat, emojiLoadingService.loadEmojis());
+        List<Emoji> emojis = emojiLoadingService.loadEmojis();
+        List<DiscordEmoji> discordEmojis = emojiLoadingService.loadDiscordEmojis();
+        List<DiscordEmoji> selectedDiscordEmojis = DiscordEmoji.getForGuild(discordEmojis, guild.getId());
+        emojis.addAll(selectedDiscordEmojis);
+
+        TextManipulationService service = new TextManipulationService(randFormat, emojis, guild);
 
         response.append("**").append(message.getAuthor().getName()).append(":").append("**").append(System.lineSeparator())
                 .append(service.getOutput(input));
@@ -227,6 +230,7 @@ public class DiscordListener extends ListenerAdapter {
     private void listEmojis(MessageChannel channel) {
         EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
         List<Emoji> emojis = emojiLoadingService.loadEmojis();
+        List<DiscordEmoji> discordEmojis = emojiLoadingService.loadDiscordEmojis();
         //if the output exceeds 2000 characters separate into several messages
         List<String> outputParts = Lists.newArrayList();
         outputParts.add("");
@@ -235,24 +239,16 @@ public class DiscordListener extends ListenerAdapter {
             StringBuilder builder = new StringBuilder();
             builder.append(emoji.getEmojiValue());
 
-            List<Keyword> keywords = emoji.getKeywords();
-            for (int i = 0; i < keywords.size(); i++) {
-                if (i == 0) builder.append("\t");
+            outputParts = listKeywords(emoji, builder, outputParts);
+        }
 
-                builder.append(keywords.get(i).getKeywordValue()).append(" (").append(keywords.get(i).isReplace()).append(")");
+        outputParts.add("Emojis from guilds:\n");
+        for (DiscordEmoji discordEmoji : discordEmojis) {
+            StringBuilder builder = new StringBuilder();
+            builder.append(discordEmoji.getEmojiValue());
+            builder.append("\t").append(discordEmoji.getGuildName());
 
-                if (i < keywords.size() - 1) builder.append(", ");
-            }
-
-            builder.append(System.lineSeparator());
-
-            //add to part if character length does not exceed 2000 else create new part
-            int lastPart = outputParts.size() - 1;
-            if (outputParts.get(lastPart).length() + builder.length() < 2000) {
-                outputParts.set(lastPart, outputParts.get(lastPart) + builder.toString());
-            } else {
-                outputParts.add(builder.toString());
-            }
+            outputParts = listKeywords(discordEmoji, builder, outputParts);
         }
 
         for (String outputPart : outputParts) {
@@ -260,10 +256,33 @@ public class DiscordListener extends ListenerAdapter {
         }
     }
 
-    private void searchQuery(Message message, String msg) {
+    private List<String> listKeywords(Emoji emoji, StringBuilder builder, List<String> outputParts) {
+        List<Keyword> keywords = emoji.getKeywords();
+        for (int i = 0; i < keywords.size(); i++) {
+            if (i == 0) builder.append("\t");
+
+            builder.append(keywords.get(i).getKeywordValue()).append(" (").append(keywords.get(i).isReplace()).append(")");
+
+            if (i < keywords.size() - 1) builder.append(", ");
+        }
+
+        builder.append(System.lineSeparator());
+
+        //add to part if character length does not exceed 2000 else create new part
+        int lastPart = outputParts.size() - 1;
+        if (outputParts.get(lastPart).length() + builder.length() < 2000) {
+            outputParts.set(lastPart, outputParts.get(lastPart) + builder.toString());
+        } else {
+            outputParts.add(builder.toString());
+        }
+
+        return outputParts;
+    }
+
+    private void searchQuery(Message message, String msg, Guild guild) {
         String query = msg.substring(msg.indexOf("\"") + 1, msg.lastIndexOf("\""));
 
-        commandHandler.searchQuery(query, message.getChannel());
+        commandHandler.searchQuery(query, message.getChannel(), guild);
     }
 
 }

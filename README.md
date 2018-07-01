@@ -7,6 +7,7 @@ Uses the Java Discord API: https://github.com/DV8FromTheWorld/JDA
 * Replaces B with 🅱️
 * Replaces keywords with emojis or adds emojis after keyword
     * One keyword can be applied to several emojis
+* Supports custom guild emotes
 
 ____________________________________________________________________________________________________________________
 

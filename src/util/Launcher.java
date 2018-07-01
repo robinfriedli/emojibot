@@ -95,7 +95,7 @@ public class Launcher {
         String input = inputSc.nextLine();
 
         EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-        TextManipulationService service = new TextManipulationService(randomFormat, emojiLoadingService.loadEmojis());
+        TextManipulationService service = new TextManipulationService(randomFormat, emojiLoadingService.loadEmojis(), null);
         System.out.println(service.getOutput(input));
 
         showMenu();
@@ -110,7 +110,7 @@ public class Launcher {
         Scanner sc = new Scanner(System.in);
         String input = sc.nextLine();
         System.out.print(System.lineSeparator());
-        commandHandler.saveEmojis(input, null);
+        commandHandler.saveEmojis(input, null, null);
 
         System.out.print(System.lineSeparator());
         showMenu();
@@ -124,7 +124,7 @@ public class Launcher {
         Scanner sc = new Scanner(System.in);
         String input = sc.nextLine();
         System.out.print(System.lineSeparator());
-        commandHandler.deleteEmojis(input, null);
+        commandHandler.deleteEmojis(input, null, null);
 
         System.out.print(System.lineSeparator());
         showMenu();
@@ -158,7 +158,7 @@ public class Launcher {
         System.out.println("Enter search term:");
         Scanner sc = new Scanner(System.in);
         String input = sc.nextLine();
-        commandHandler.searchQuery(input, null);
+        commandHandler.searchQuery(input, null, null);
 
         System.out.print(System.lineSeparator());
         showMenu();

@@ -1,5 +1,6 @@
 package util;
 
+import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
 import com.google.common.collect.ArrayListMultimap;
@@ -8,6 +9,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import core.EmojiAddingService;
 import core.EmojiLoadingService;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.MessageChannel;
 
 import javax.annotation.Nullable;
@@ -30,16 +32,24 @@ public class CommandHandler {
      * @param command whole command as String
      * @param channel Nullable; use if called from DiscordListener
      */
-    public void saveEmojis(String command, @Nullable MessageChannel channel) {
+    public void saveEmojis(String command, @Nullable MessageChannel channel, @Nullable Guild guild) {
         EmojiAddingService emojiAddingService = new EmojiAddingService();
         List<Integer> quotations = findQuotations(command);
 
         //if following syntax is used: +e "emoji1, emoji2"
         if (quotations.size() == 2) {
-            String emojis = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
-            String[] emojiList = emojis.split(", ");
+            String emojisToAdd = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
+            List<String> emojiList = filterColons(Lists.newArrayList(emojisToAdd.split(", ")));
 
-            emojiAddingService.addEmojis(emojiList, channel);
+            if (guild != null) {
+                List<String> discordEmojis = filterDiscordEmojis(emojiList, guild);
+                if (!discordEmojis.isEmpty()) {
+                    emojiList.removeAll(discordEmojis);
+                    emojiAddingService.addDiscordEmojis(discordEmojis, guild, channel);
+                }
+            }
+
+            if (!emojiList.isEmpty()) emojiAddingService.addEmojis(emojiList, channel);
         }
 
         //if following syntax is used: +e "emoji1, emoji2" "keyword1, keyword2" "true, false"
@@ -48,18 +58,23 @@ public class CommandHandler {
             String keywords = command.substring(quotations.get(2) + 1, quotations.get(3));
             String replaceTags = command.substring(quotations.get(4) + 1, quotations.get(5));
 
-            String[] emojiList = emojis.split(", ");
+            List<String> emojiList = filterColons(Lists.newArrayList(emojis.split(", ")));
             String[] keywordList = keywords.split(", ");
             String[] replaceTagList = replaceTags.split(", ");
 
             if (Arrays.stream(replaceTagList).allMatch(s -> s.equals("true") || s.equals("false"))
                     && keywordList.length == replaceTagList.length
                     && Arrays.stream(keywordList).allMatch(k -> k.equals(k.toLowerCase()))) {
-                try {
-                    emojiAddingService.addEmojis(emojiList, keywordList, replaceTagList, channel);
-                } catch (IllegalStateException e) {
-                    channel.sendMessage(e.getMessage()).queue();
+
+                if (guild != null) {
+                    List<String> discordEmojis = filterDiscordEmojis(emojiList, guild);
+                    if (!discordEmojis.isEmpty()) {
+                        emojiList.removeAll(discordEmojis);
+                        emojiAddingService.addDiscordEmojis(discordEmojis, keywordList, replaceTagList, guild, channel);
+                    }
                 }
+
+                if (!emojiList.isEmpty()) emojiAddingService.addEmojis(emojiList, keywordList, replaceTagList, channel);
             } else {
                 StringBuilder builder = new StringBuilder();
 
@@ -86,23 +101,39 @@ public class CommandHandler {
      * @param command whole command as String
      * @param channel Nullable; use if called from DiscordListener
      */
-    public void deleteEmojis(String command, @Nullable MessageChannel channel) {
+    public void deleteEmojis(String command, @Nullable MessageChannel channel, @Nullable Guild guild) {
         EmojiAddingService emojiAddingService = new EmojiAddingService();
         List<Integer> quotations = findQuotations(command);
 
         if (quotations.size() == 2) {
             String emojiStrings = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
-            List<String> emojiList = Lists.newArrayList(Arrays.asList(emojiStrings.split(", ")));
+            List<String> emojiList = filterColons(Lists.newArrayList(emojiStrings.split(", ")));
 
-            emojiAddingService.removeEmojis(emojiList, channel);
+            if (guild != null) {
+                List<String> discordEmojis = filterDiscordEmojis(emojiList, guild);
+                if (!discordEmojis.isEmpty()) {
+                    emojiList.removeAll(discordEmojis);
+                    emojiAddingService.removeDiscordEmojis(discordEmojis, guild, channel);
+                }
+            }
+
+            if (!emojiList.isEmpty()) emojiAddingService.removeEmojis(emojiList, channel);
         } else if (quotations.size() == 4) {
             String emojiStrings = command.substring(quotations.get(0) + 1, quotations.get(1));
             String keywords = command.substring(quotations.get(2) + 1, quotations.get(3));
 
-            List<String> emojiList = Lists.newArrayList(Arrays.asList(emojiStrings.split(", ")));
+            List<String> emojiList = filterColons(Lists.newArrayList(emojiStrings.split(", ")));
             List<String> keywordList = Lists.newArrayList(Arrays.asList(keywords.split(", ")));
 
-            emojiAddingService.removeKeywords(emojiList, keywordList, channel);
+            if (guild != null) {
+                List<String> discordEmojis = filterDiscordEmojis(emojiList, guild);
+                if (!discordEmojis.isEmpty()) {
+                    emojiList.removeAll(discordEmojis);
+                    emojiAddingService.removeKeywords(discordEmojis, keywordList, guild, channel);
+                }
+            }
+
+            if (!emojiList.isEmpty()) emojiAddingService.removeKeywords(emojiList, keywordList, channel);
         } else {
             StringBuilder builder = new StringBuilder();
             builder.append("Invalid input.");
@@ -118,15 +149,26 @@ public class CommandHandler {
      * @param searchTerm matches value of keyword or emoji
      * @param channel    Nullable; use if called from DiscordListener
      */
-    public void searchQuery(String searchTerm, @Nullable MessageChannel channel) {
+    public void searchQuery(String searchTerm, @Nullable MessageChannel channel, @Nullable Guild guild) {
         EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
         StringBuilder responseBuilder = new StringBuilder();
 
-        List<Emoji> emojis = emojiLoadingService.loadEmojis();
-        List<Keyword> keywords = Emoji.getAllKeywords(emojis);
+        if (searchTerm.startsWith(":") && searchTerm.endsWith(":")) {
+            searchTerm = searchTerm.substring(1, searchTerm.length() - 1);
+        }
 
-        Optional<Emoji> optionalEmoji = emojis.stream().filter(e -> e.getEmojiValue().equals(searchTerm)).findAny();
-        Optional<Keyword> optionalKeyword = keywords.stream().filter(k -> k.getKeywordValue().equals(searchTerm)).findAny();
+        List<Emoji> emojis = emojiLoadingService.loadEmojis();
+        List<DiscordEmoji> discordEmojis = emojiLoadingService.loadDiscordEmojis();
+
+        List<Keyword> keywords = Emoji.getAllKeywords(emojis);
+        keywords.addAll(Emoji.getAllKeywords(discordEmojis));
+
+        String finalSearchTerm = searchTerm;
+        Optional<Emoji> optionalEmoji = emojis.stream().filter(e -> e.getEmojiValue().equals(finalSearchTerm)).findAny();
+        Optional<Keyword> optionalKeyword = keywords.stream().filter(k -> k.getKeywordValue().equals(finalSearchTerm)).findAny();
+        Optional<DiscordEmoji> optionalDiscordEmoji = discordEmojis.stream()
+                .filter(e -> e.getName().equals(finalSearchTerm))
+                .findAny();
 
         if (optionalEmoji.isPresent()) {
             responseBuilder.append("\"").append(searchTerm).append("\"").append(" is an emoji.");
@@ -146,15 +188,40 @@ public class CommandHandler {
             responseBuilder.append("\"").append(searchTerm).append("\"").append(" is a keyword for following emojis:")
                     .append(System.lineSeparator());
             List<Emoji> emojisForKeyword = Emoji.loadFromKeyword(optionalKeyword.get(), emojis);
+            List<DiscordEmoji> discordEmojisForKeyword = DiscordEmoji.getForKeyword(optionalKeyword.get(), discordEmojis);
 
             for (Emoji emoji : emojisForKeyword) {
                 responseBuilder.append(emoji.getEmojiValue())
                         .append("\treplace: ").append(emoji.requireKeyword(searchTerm).isReplace())
                         .append(System.lineSeparator());
             }
+
+            for (DiscordEmoji discordEmoji : discordEmojisForKeyword) {
+                responseBuilder.append(discordEmoji.getEmojiValue())
+                        .append("\treplace: ").append(discordEmoji.requireKeyword(searchTerm).isReplace())
+                        .append("\tguild: ").append(discordEmoji.getGuildName())
+                        .append(System.lineSeparator());
+            }
         }
 
-        if (!(optionalEmoji.isPresent() || optionalKeyword.isPresent())) {
+        if (optionalDiscordEmoji.isPresent()) {
+            DiscordEmoji discordEmoji = optionalDiscordEmoji.get();
+            List<Keyword> keywordsOnEmoji = discordEmoji.getKeywords();
+
+            responseBuilder.append("\"").append(searchTerm).append("\"").append(" is an emoji on guild ")
+                    .append(discordEmoji.getGuildName()).append(System.lineSeparator());
+
+            if (!keywordsOnEmoji.isEmpty()) {
+                responseBuilder.append("With following keywords: ").append(System.lineSeparator());
+
+                for (Keyword keyword : keywordsOnEmoji) {
+                    responseBuilder.append(keyword.getKeywordValue()).append("\t").append(keyword.isReplace())
+                            .append(System.lineSeparator());
+                }
+            }
+        }
+
+        if (!(optionalEmoji.isPresent() || optionalKeyword.isPresent() || optionalDiscordEmoji.isPresent())) {
             responseBuilder.append("No emoji or keyword found for \"").append(searchTerm).append("\"");
         }
 
@@ -257,6 +324,29 @@ public class CommandHandler {
         }
 
         return positions;
+    }
+
+    private List<String> filterColons(List<String> emojis) {
+        for (int i = 0; i < emojis.size(); i++) {
+            String emoji = emojis.get(i);
+            if (emoji.startsWith(":") && emoji.endsWith(":")) {
+                emoji = emoji.substring(1, emoji.length() - 1);
+                emojis.set(i, emoji);
+            }
+        }
+        return emojis;
+    }
+
+    private List<String> filterDiscordEmojis(List<String> emojis, Guild guild) {
+        return emojis.stream().filter(e -> isDiscordEmoji(e, guild)).collect(Collectors.toList());
+    }
+
+    private boolean isDiscordEmoji(String emoji, Guild guild) {
+        if (guild != null) {
+            return guild.getEmotes().stream().anyMatch(e -> e.getName().equals(emoji));
+        } else {
+            return false;
+        }
     }
 
 }

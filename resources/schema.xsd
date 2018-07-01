@@ -5,6 +5,7 @@
     <xs:complexType name="emojiList">
         <xs:sequence>
             <xs:element name="emoji" type="emoji"/>
+            <xs:element name="discord-emoji" type="discord-emoji"/>
         </xs:sequence>
     </xs:complexType>
 
@@ -14,6 +15,17 @@
             <xs:element name="keyword" type="keyword"/>
         </xs:sequence>
         <xs:attribute name="value" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:element name="discord-emoji" type="discord-emoji"/>
+    <xs:complexType name="discord-emoji">
+        <xs:sequence>
+            <xs:element name="keyword" type="keyword"/>
+        </xs:sequence>
+        <xs:attribute name="value" type="xs:string"/>
+        <xs:attribute name="name" type="xs:string"/>
+        <xs:attribute name="guildId" type="xs:string"/>
+        <xs:attribute name="guildName" type="xs:string"/>
     </xs:complexType>
 
     <xs:complexType name="keyword">

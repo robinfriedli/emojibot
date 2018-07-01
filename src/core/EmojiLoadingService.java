@@ -1,5 +1,6 @@
 package core;
 
+import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
 import com.google.common.collect.Lists;
@@ -34,6 +35,27 @@ public class EmojiLoadingService {
                 Element elem = (Element) emoji;
                 String emojiValue = elem.getAttribute("value");
                 emojis.add(new Emoji(getKeywords(elem), emojiValue));
+            }
+        }
+
+        return emojis;
+    }
+
+    public List<DiscordEmoji> loadDiscordEmojis() {
+        Document doc = getDocument();
+        NodeList emojiList = doc.getElementsByTagName("discord-emoji");
+        List<DiscordEmoji> emojis = Lists.newArrayList();
+
+        for (int i = 0; i < emojiList.getLength(); i++) {
+            Node emoji = emojiList.item(i);
+
+            if (emoji.getNodeType() == Node.ELEMENT_NODE) {
+                Element elem = (Element) emoji;
+                String name = elem.getAttribute("name");
+                String guildId = elem.getAttribute("guildId");
+                String guildName = elem.getAttribute("guildName");
+                String emojiValue = elem.getAttribute("value");
+                emojis.add(new DiscordEmoji(getKeywords(elem), emojiValue, name, guildId, guildName));
             }
         }
 

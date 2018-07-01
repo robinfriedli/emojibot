@@ -3,7 +3,7 @@ Adds emojis to text.
 • Replaces B with 🅱️
 • Replaces keywords with defined emojis or adds emojis after keyword
     • One keyword can be applied to several emojis
-
+• Supports custom guild emotes
 ____________________________________________________________________________________________________________________
 
 Transform text into emojitext: 'e!e text' or 'e!e -r text' to enable random markdown formatting

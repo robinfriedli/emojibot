@@ -68,7 +68,8 @@ public class AlertService {
         StringBuilder builder = new StringBuilder();
 
         if (addedKeywords.isEmpty() && adjustedKeywords.isEmpty()) {
-            builder.append("All emojis and keywords already exist as is. No changes have been made.");
+            builder.append("All emojis and keywords already exist as is. No changes have been made.")
+                    .append(System.lineSeparator());
         } else {
             builder.append(buildAddedEmojisAlertMessage(addedEmojis, existingEmojis));
 
@@ -138,7 +139,7 @@ public class AlertService {
                         .append(System.lineSeparator());
             }
         } else {
-            builder.append("All emojis already exist.");
+            builder.append("All emojis already exist.").append(System.lineSeparator());
         }
 
         return builder.toString();

@@ -19,6 +19,10 @@ public class Emoji {
         return keywords;
     }
 
+    public boolean hasKeyword(Keyword keyword) {
+        return keywords.contains(keyword);
+    }
+
     public Keyword requireKeyword(String value) {
         List<Keyword> matchedKeywords = keywords.stream()
                 .filter(k -> k.getKeywordValue().equals(value))
@@ -46,7 +50,7 @@ public class Emoji {
         this.emojiValue = emoji;
     }
 
-    public static List<Keyword> getAllKeywords(List<Emoji> emojis) {
+    public static List<Keyword> getAllKeywords(List<? extends Emoji> emojis) {
         List<Keyword> keywords = Lists.newArrayList();
         for (Emoji emoji : emojis) {
             keywords.addAll(emoji.getKeywords());
@@ -68,20 +72,10 @@ public class Emoji {
     }
 
     public static List<Emoji> loadFromKeyword(Keyword keyword, List<Emoji> emojis) {
-        List<Emoji> selectedEmojis = Lists.newArrayList();
-        for (Emoji emoji : emojis) {
-            List<Keyword> keywordsForEmoji = emoji.getKeywords();
-            for (Keyword keywordForEmoji : keywordsForEmoji) {
-                if (keywordForEmoji.getKeywordValue().equals(keyword.getKeywordValue())) {
-                    selectedEmojis.add(emoji);
-                }
-            }
-        }
-        if (!selectedEmojis.isEmpty()) {
-            return selectedEmojis;
-        } else {
-            throw new IllegalStateException("No emojis found for keyword " + keyword.getKeywordValue() + " within provided list");
-        }
+        return emojis.stream()
+                .filter(e -> !(e instanceof DiscordEmoji))
+                .filter(e -> e.hasKeyword(keyword))
+                .collect(Collectors.toList());
     }
 
     public static Emoji loadFromValue(String value, List<Emoji> emojis) {

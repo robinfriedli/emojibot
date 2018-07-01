@@ -3,6 +3,8 @@ package core;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import net.dv8tion.jda.core.entities.Emote;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -25,7 +27,7 @@ public class EmojiAddingService {
     private EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
     private AlertService alertService = new AlertService();
 
-    public void addEmojis(String[] emojis, @Nullable MessageChannel channel) {
+    public void addEmojis(List<String> emojis, @Nullable MessageChannel channel) {
         Document doc = emojiLoadingService.getDocument();
         Element rootElem = doc.getDocumentElement();
 
@@ -48,7 +50,36 @@ public class EmojiAddingService {
         alertService.alertAddedEmojis(addedEmojis, existingEmojis, channel);
     }
 
-    public void addEmojis(String[] emojis, String[] keywords, String[] replaceTags, @Nullable MessageChannel channel) {
+    public void addDiscordEmojis(List<String> emojis, Guild guild, MessageChannel channel) {
+        Document doc = emojiLoadingService.getDocument();
+        Element rootElem = doc.getDocumentElement();
+
+        List<String> addedEmojis = Lists.newArrayList();
+        List<String> existingEmojis = Lists.newArrayList();
+
+        for (String name : emojis) {
+            for (Emote emote : guild.getEmotesByName(name, true)) {
+                String emojiValue = emote.getAsMention();
+                if (!discordEmojiExists(doc, emojiValue)) {
+                    Element emojiElem = doc.createElement("discord-emoji");
+                    emojiElem.setAttribute("value", emojiValue);
+                    emojiElem.setAttribute("name", name);
+                    emojiElem.setAttribute("guildId", guild.getId());
+                    emojiElem.setAttribute("guildName", guild.getName());
+                    rootElem.appendChild(emojiElem);
+
+                    addedEmojis.add(name);
+                } else {
+                    existingEmojis.add(name);
+                }
+            }
+        }
+
+        writeToFile(doc);
+        alertService.alertAddedEmojis(addedEmojis, existingEmojis, channel);
+    }
+
+    public void addEmojis(List<String> emojis, String[] keywords, String[] replaceTags, @Nullable MessageChannel channel) {
         Document doc = emojiLoadingService.getDocument();
         Element rootElem = doc.getDocumentElement();
 
@@ -106,6 +137,75 @@ public class EmojiAddingService {
         alertService.alertAddedEmojis(addedEmojis, existingEmojis, addedKeywords, adjustedKeywords, existingKeywords, channel);
     }
 
+    public void addDiscordEmojis(List<String> emojis,
+                                 String[] keywords,
+                                 String[] replaceTags,
+                                 Guild guild,
+                                 MessageChannel channel) {
+        Document doc = emojiLoadingService.getDocument();
+        Element rootElem = doc.getDocumentElement();
+
+        List<String> addedEmojis = Lists.newArrayList();
+        List<String> existingEmojis = Lists.newArrayList();
+        Multimap<String, String> addedKeywords = HashMultimap.create();
+        Multimap<String, String> existingKeywords = HashMultimap.create();
+        Multimap<String, String> adjustedKeywords = HashMultimap.create();
+
+
+        for (String name : emojis) {
+            for (Emote emote : guild.getEmotesByName(name, true)) {
+                String emojiValue = emote.getAsMention();
+                Element emojiElem;
+
+                //only create new emoji if there isn't one with the same value, else load the existing emoji
+                if (!discordEmojiExists(doc, emojiValue)) {
+                    emojiElem = doc.createElement("discord-emoji");
+                    emojiElem.setAttribute("value", emojiValue);
+                    emojiElem.setAttribute("name", name);
+                    emojiElem.setAttribute("guildId", guild.getId());
+                    emojiElem.setAttribute("guildName", guild.getName());
+
+                    addedEmojis.add(emojiValue);
+                } else {
+                    emojiElem = getDiscordEmojiElem(doc, emojiValue);
+
+                    existingEmojis.add(emojiValue);
+                }
+
+                for (int i = 0; i < keywords.length; i++) {
+                    Element keywordElem;
+
+                    //only create new keyword if it doesn't already exist on the same emoji, else load existing keyword
+                    // and adjust replace flag
+                    if (!keywordExists(emojiElem, keywords[i])) {
+                        keywordElem = doc.createElement("keyword");
+                        keywordElem.setAttribute("replace", replaceTags[i]);
+                        keywordElem.setTextContent(keywords[i]);
+
+                        addedKeywords.put(emojiValue, keywords[i]);
+                    } else {
+                        keywordElem = getKeywordElem(emojiElem, keywords[i]);
+
+                        if (!keywordElem.getAttribute("replace").equals(replaceTags[i])) {
+                            keywordElem.setAttribute("replace", replaceTags[i]);
+
+                            adjustedKeywords.put(emojiValue, keywords[i]);
+                        } else {
+                            existingKeywords.put(emojiValue, keywords[i]);
+                        }
+                    }
+
+                    emojiElem.appendChild(keywordElem);
+                }
+
+                rootElem.appendChild(emojiElem);
+            }
+        }
+
+        writeToFile(doc);
+        alertService.alertAddedEmojis(addedEmojis, existingEmojis, addedKeywords, adjustedKeywords, existingKeywords, channel);
+    }
+
     public void removeEmojis(List<String> emojisToRemove, @Nullable MessageChannel channel) {
         Document doc = emojiLoadingService.getDocument();
         Element rootElem = doc.getDocumentElement();
@@ -125,6 +225,23 @@ public class EmojiAddingService {
 
         writeToFile(doc);
         alertService.alertRemovedEmojis(removedEmojis, emojisToRemove, channel);
+    }
+
+    public void removeDiscordEmojis(List<String> emojisToRemove, Guild guild, MessageChannel channel) {
+        Document doc = emojiLoadingService.getDocument();
+        Element rootElem = doc.getDocumentElement();
+        List<String> emojistToRemoveValues = getDiscordEmojiValues(emojisToRemove, guild);
+        List<String> removedEmojis = Lists.newArrayList();
+
+        for (Element element : getDiscordEmojiElems(doc, emojistToRemoveValues)) {
+            String value = element.getAttribute("value");
+            rootElem.removeChild(element);
+            removedEmojis.add(value);
+            emojistToRemoveValues.remove(value);
+        }
+
+        writeToFile(doc);
+        alertService.alertRemovedEmojis(removedEmojis, emojistToRemoveValues, channel);
     }
 
     public void removeKeywords(List<String> emojis, List<String> keywordsToRemove, @Nullable MessageChannel channel) {
@@ -162,6 +279,46 @@ public class EmojiAddingService {
 
         writeToFile(doc);
         alertService.alertRemovedKeywords(emojis, removedKeywords, missingKeywords, channel);
+    }
+
+    public void removeKeywords(List<String> discordEmojiNames,
+                               List<String> keywordsToRemove,
+                               Guild guild,
+                               MessageChannel channel) {
+        Document doc = emojiLoadingService.getDocument();
+        List<String> discordEmojiValues = getDiscordEmojiValues(discordEmojiNames, guild);
+        Multimap<String, String> missingKeywords = HashMultimap.create();
+        Multimap<String, String> removedKeywords = HashMultimap.create();
+
+        for (Element emojiElem : getDiscordEmojiElems(doc, discordEmojiValues)) {
+            String emojiName = emojiElem.getAttribute("name");
+            String emojiValue = emojiElem.getAttribute("value");
+
+            if (discordEmojiNames.contains(emojiName)) {
+                List<Element> keywordElems = getKeywordElems(emojiElem, keywordsToRemove);
+                List<String> keywordsOnEmoji = Lists.newArrayList(keywordsToRemove);
+
+                for (Element keywordElem : keywordElems) {
+                    String keyword = keywordElem.getTextContent();
+
+                    if (keywordsToRemove.contains(keyword)) {
+                        emojiElem.removeChild(keywordElem);
+
+                        keywordsOnEmoji.remove(keyword);
+                        removedKeywords.put(emojiValue, keyword);
+                    }
+                }
+
+                if (!keywordsOnEmoji.isEmpty()) {
+                    keywordsOnEmoji.forEach(k -> missingKeywords.put(emojiValue, k));
+                }
+            }
+
+            discordEmojiValues.remove(emojiValue);
+        }
+
+        writeToFile(doc);
+        alertService.alertRemovedKeywords(discordEmojiValues, removedKeywords, missingKeywords, channel);
     }
 
     public void mergeDuplicateEmojis(Set<String> duplicateEmojis, @Nullable MessageChannel channel) {
@@ -287,6 +444,15 @@ public class EmojiAddingService {
         return getEmojiElem(doc, emojiString) != null;
     }
 
+    private boolean discordEmojiExists(Document doc, String emojiValue) {
+        try {
+            return getDiscordEmojiElem(doc, emojiValue) != null;
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+            return true;
+        }
+    }
+
     private boolean keywordExists(Element emojiElem, String keywordString) {
         return getKeywordElem(emojiElem, keywordString) != null;
     }
@@ -317,6 +483,30 @@ public class EmojiAddingService {
             if (emojiString.equals(emojiValue)) {
                 return emoji;
             }
+        }
+
+        return null;
+    }
+
+    private List<Element> getDiscordEmojiElems(Document doc, List<String> emojiValues) {
+        List<Element> emojiElems = nodeListToElementList(doc.getElementsByTagName("discord-emoji"));
+
+        return emojiElems.stream()
+                .filter(e -> emojiValues.contains(e.getAttribute("value")))
+                .collect(Collectors.toList());
+    }
+
+    private Element getDiscordEmojiElem(Document doc, String emojiValue) {
+        List<Element> emojiElems = nodeListToElementList(doc.getElementsByTagName("discord-emoji"));
+
+        List<Element> matchedEmojis = emojiElems.stream()
+                .filter(e -> e.getAttribute("value").equals(emojiValue))
+                .collect(Collectors.toList());
+
+        if (matchedEmojis.size() == 1) {
+            return matchedEmojis.get(0);
+        } else if (matchedEmojis.size() > 1) {
+            throw new IllegalStateException("Duplicate Discord Emojis found. Clean up your XML configuration using the clean command");
         }
 
         return null;
@@ -360,6 +550,20 @@ public class EmojiAddingService {
         }
 
         return elements;
+    }
+
+    private List<String> getDiscordEmojiValues(List<String> names, Guild guild) {
+        List<String> discordEmojiValues = Lists.newArrayList();
+
+        for (String emoji : names) {
+            discordEmojiValues.addAll(
+                    guild.getEmotesByName(emoji, true).stream()
+                            .map(Emote::getAsMention)
+                            .collect(Collectors.toList())
+            );
+        }
+
+        return discordEmojiValues;
     }
 
     private void writeToFile(Document doc) {
