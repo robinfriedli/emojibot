@@ -45,6 +45,6 @@ public class DiscordEmoji extends Emoji {
     }
 
     public static List<DiscordEmoji> getForKeyword(Keyword keyword, List<DiscordEmoji> emojis) {
-        return emojis.stream().filter(e -> e.hasKeyword(keyword)).collect(Collectors.toList());
+        return emojis.stream().filter(e -> e.hasKeywordValue(keyword.getKeywordValue())).collect(Collectors.toList());
     }
 }

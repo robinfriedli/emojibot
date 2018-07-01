@@ -23,6 +23,11 @@ public class Emoji {
         return keywords.contains(keyword);
     }
 
+    public boolean hasKeywordValue(String keyword) {
+        List<String> keywords = this.keywords.stream().map(Keyword::getKeywordValue).collect(Collectors.toList());
+        return keywords.contains(keyword);
+    }
+
     public Keyword requireKeyword(String value) {
         List<Keyword> matchedKeywords = keywords.stream()
                 .filter(k -> k.getKeywordValue().equals(value))
@@ -74,7 +79,7 @@ public class Emoji {
     public static List<Emoji> loadFromKeyword(Keyword keyword, List<Emoji> emojis) {
         return emojis.stream()
                 .filter(e -> !(e instanceof DiscordEmoji))
-                .filter(e -> e.hasKeyword(keyword))
+                .filter(e -> e.hasKeywordValue(keyword.getKeywordValue()))
                 .collect(Collectors.toList());
     }
 
