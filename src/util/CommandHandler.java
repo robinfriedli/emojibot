@@ -3,12 +3,14 @@ package util;
 import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
+import api.StringListImpl;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import core.EmojiAddingService;
 import core.EmojiLoadingService;
+import net.dv8tion.jda.core.entities.Emote;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.MessageChannel;
 
@@ -207,8 +209,12 @@ public class CommandHandler {
         if (optionalDiscordEmoji.isPresent()) {
             DiscordEmoji discordEmoji = optionalDiscordEmoji.get();
             List<Keyword> keywordsOnEmoji = discordEmoji.getKeywords();
+            String foundEmojis = guild != null ?
+                    StringListImpl.create(guild.getEmotesByName(searchTerm, true).stream()
+                            .map(Emote::getAsMention).collect(Collectors.toList())).toString()
+                    : "";
 
-            responseBuilder.append("\"").append(searchTerm).append("\"").append(" is an emoji on guild ")
+            responseBuilder.append("\"").append(foundEmojis).append("\"").append(" is an emoji on guild ")
                     .append(discordEmoji.getGuildName()).append(System.lineSeparator());
 
             if (!keywordsOnEmoji.isEmpty()) {

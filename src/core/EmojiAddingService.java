@@ -68,9 +68,9 @@ public class EmojiAddingService {
                     emojiElem.setAttribute("guildName", guild.getName());
                     rootElem.appendChild(emojiElem);
 
-                    addedEmojis.add(name);
+                    addedEmojis.add(emojiValue);
                 } else {
-                    existingEmojis.add(name);
+                    existingEmojis.add(emojiValue);
                 }
             }
         }
