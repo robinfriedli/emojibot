@@ -151,7 +151,7 @@ public class TextManipulationService {
 
     private String filterOutput(String input) {
         //replace all b or B with B emoji
-        input = input.replaceAll("(?i)b", "\uD83C\uDD71️");
+        input = replaceB(input);
 
         //replace all spaces with emojis
         StringList strings = StringListImpl.charsToList(input);
@@ -166,6 +166,22 @@ public class TextManipulationService {
         input = strings.toString();
 
         return input;
+    }
+
+    private String replaceB(String input) {
+        StringList words = StringListImpl.createWords(input);
+
+        for (int i = 0; i < words.size(); i++) {
+            //list also contains spaces and interpunctions so we need to check if this is indeed a word
+            String prevWord = i > 0 ? words.get(i - 1) : " ";
+            String nextWord = i < words.size() - 1 ? words.get(i + 1) : " ";
+            String word = words.get(i);
+            if (isWord(prevWord, word, nextWord)) {
+                words.set(i, words.get(i).replaceAll("(?i)b", "\uD83C\uDD71️"));
+            }
+        }
+
+        return words.toString();
     }
 
     private String applyRandomFormat(String input) {
