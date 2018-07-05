@@ -42,16 +42,16 @@ public class CommandHandler {
         if (quotations.size() == 2) {
             String emojisToAdd = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
             List<String> emojiList = filterColons(Lists.newArrayList(emojisToAdd.split(", ")));
+            List<String> discordEmojis = Lists.newArrayList();
 
             if (guild != null) {
-                List<String> discordEmojis = filterDiscordEmojis(emojiList, guild);
+                discordEmojis = filterDiscordEmojis(emojiList, guild);
                 if (!discordEmojis.isEmpty()) {
                     emojiList.removeAll(discordEmojis);
-                    emojiAddingService.addDiscordEmojis(discordEmojis, guild, channel);
                 }
             }
 
-            if (!emojiList.isEmpty()) emojiAddingService.addEmojis(emojiList, channel);
+            emojiAddingService.addEmojis(emojiList, discordEmojis, channel, guild);
         }
 
         //if following syntax is used: +e "emoji1, emoji2" "keyword1, keyword2" "true, false"
@@ -61,6 +61,7 @@ public class CommandHandler {
             String replaceTags = command.substring(quotations.get(4) + 1, quotations.get(5));
 
             List<String> emojiList = filterColons(Lists.newArrayList(emojis.split(", ")));
+            List<String> discordEmojis = Lists.newArrayList();
             String[] keywordList = keywords.split(", ");
             String[] replaceTagList = replaceTags.split(", ");
 
@@ -69,14 +70,13 @@ public class CommandHandler {
                     && Arrays.stream(keywordList).allMatch(k -> k.equals(k.toLowerCase()))) {
 
                 if (guild != null) {
-                    List<String> discordEmojis = filterDiscordEmojis(emojiList, guild);
+                    discordEmojis = filterDiscordEmojis(emojiList, guild);
                     if (!discordEmojis.isEmpty()) {
                         emojiList.removeAll(discordEmojis);
-                        emojiAddingService.addDiscordEmojis(discordEmojis, keywordList, replaceTagList, guild, channel);
                     }
                 }
 
-                if (!emojiList.isEmpty()) emojiAddingService.addEmojis(emojiList, keywordList, replaceTagList, channel);
+                emojiAddingService.addEmojis(emojiList, discordEmojis, keywordList, replaceTagList, channel, guild);
             } else {
                 StringBuilder builder = new StringBuilder();
 
@@ -110,32 +110,32 @@ public class CommandHandler {
         if (quotations.size() == 2) {
             String emojiStrings = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
             List<String> emojiList = filterColons(Lists.newArrayList(emojiStrings.split(", ")));
+            List<String> discordEmojis = Lists.newArrayList();
 
             if (guild != null) {
-                List<String> discordEmojis = filterDiscordEmojis(emojiList, guild);
+                discordEmojis = filterDiscordEmojis(emojiList, guild);
                 if (!discordEmojis.isEmpty()) {
                     emojiList.removeAll(discordEmojis);
-                    emojiAddingService.removeDiscordEmojis(discordEmojis, guild, channel);
                 }
             }
 
-            if (!emojiList.isEmpty()) emojiAddingService.removeEmojis(emojiList, channel);
+            emojiAddingService.removeEmojis(emojiList, discordEmojis, channel, guild);
         } else if (quotations.size() == 4) {
             String emojiStrings = command.substring(quotations.get(0) + 1, quotations.get(1));
             String keywords = command.substring(quotations.get(2) + 1, quotations.get(3));
 
             List<String> emojiList = filterColons(Lists.newArrayList(emojiStrings.split(", ")));
+            List<String> discordEmojis = Lists.newArrayList();
             List<String> keywordList = Lists.newArrayList(Arrays.asList(keywords.split(", ")));
 
             if (guild != null) {
-                List<String> discordEmojis = filterDiscordEmojis(emojiList, guild);
+                discordEmojis = filterDiscordEmojis(emojiList, guild);
                 if (!discordEmojis.isEmpty()) {
                     emojiList.removeAll(discordEmojis);
-                    emojiAddingService.removeKeywords(discordEmojis, keywordList, guild, channel);
                 }
             }
 
-            if (!emojiList.isEmpty()) emojiAddingService.removeKeywords(emojiList, keywordList, channel);
+            emojiAddingService.removeKeywords(emojiList, discordEmojis, keywordList, channel, guild);
         } else {
             StringBuilder builder = new StringBuilder();
             builder.append("Invalid input.");
