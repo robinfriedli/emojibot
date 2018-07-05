@@ -8,7 +8,7 @@ Uses the Java Discord API: https://github.com/DV8FromTheWorld/JDA
 * Replaces keywords with emojis or adds emojis after keyword
     * One keyword can be applied to several emojis
 * Supports custom guild emotes
-
+* Allows you to use animated emotes without Discord Nitro
 ____________________________________________________________________________________________________________________
 
 ## Commands:

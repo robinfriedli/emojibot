@@ -4,6 +4,7 @@ Adds emojis to text.
 • Replaces keywords with defined emojis or adds emojis after keyword
     • One keyword can be applied to several emojis
 • Supports custom guild emotes
+• Allows you to use animated emotes without Discord Nitro
 ____________________________________________________________________________________________________________________
 
 Transform text into emojitext: 'e!e text' or 'e!e -r text' to enable random markdown formatting
