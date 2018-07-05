@@ -3,7 +3,10 @@ package api;
 import com.google.common.collect.Lists;
 
 import java.text.BreakIterator;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class StringListImpl implements StringList {
@@ -196,6 +199,10 @@ public class StringListImpl implements StringList {
         return new StringListImpl(strings);
     }
 
+    public static StringList create() {
+        return new StringListImpl(Lists.newArrayList());
+    }
+
     public static StringList charsToList(String string) {
         List<String> charsAsString = Lists.newArrayList();
         for (Character character : string.toCharArray()) {
@@ -207,5 +214,29 @@ public class StringListImpl implements StringList {
 
     public Stream<String> stream() {
         return values.stream();
+    }
+
+    public static List<String> getAllValues(StringList... stringLists) {
+        List<String> values = Lists.newArrayList();
+        for (StringList stringList : stringLists) {
+            values.addAll(stringList.getValues());
+        }
+        return values;
+    }
+
+    public static StringList join(StringList... stringLists) {
+        List<String> values = getAllValues(stringLists);
+        return StringListImpl.create(values);
+    }
+
+    @SafeVarargs
+    public static StringList join(List<String>... lists) {
+        StringList stringList = StringListImpl.create();
+
+        for (List<String> list : lists) {
+            stringList.addAll(list);
+        }
+
+        return stringList;
     }
 }
