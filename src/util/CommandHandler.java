@@ -42,7 +42,8 @@ public class CommandHandler {
             List<String> discordEmojis = Lists.newArrayList();
 
             if (quotations.size() == 4) {
-                List<String> randomArgs = Lists.newArrayList(command.substring(quotations.get(2) + 1, quotations.get(3)));
+                String randomArgsString = command.substring(quotations.get(2) + 1, quotations.get(3));
+                List<String> randomArgs = Lists.newArrayList(randomArgsString.split(", "));
                 randomTags.addAll(randomArgs);
             }
 
@@ -79,7 +80,8 @@ public class CommandHandler {
             String[] replaceTagList = replaceTags.split(", ");
 
             if (quotations.size() == 8) {
-                List<String> randomArgs = Lists.newArrayList(command.substring(quotations.get(2) + 1, quotations.get(3)));
+                String randomArgsString = command.substring(quotations.get(2) + 1, quotations.get(3));
+                List<String> randomArgs = Lists.newArrayList(randomArgsString.split(", "));
                 randomTags.addAll(randomArgs);
             }
 
