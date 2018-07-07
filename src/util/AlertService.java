@@ -55,12 +55,16 @@ public class AlertService {
         send(builder.toString(), channel);
     }
 
-    public void alertAddedEmojis(List<String> addedEmojis, List<String> existingEmojis, @Nullable MessageChannel channel) {
-        send(buildAddedEmojisAlertMessage(addedEmojis, existingEmojis), channel);
+    public void alertAddedEmojis(List<String> addedEmojis,
+                                 List<String> existingEmojis,
+                                 List<String> adjustedEmojis,
+                                 @Nullable MessageChannel channel) {
+        send(buildAddedEmojisAlertMessage(addedEmojis, existingEmojis, adjustedEmojis), channel);
     }
 
     public void alertAddedEmojis(List<String> addedEmojis,
                                  List<String> existingEmojis,
+                                 List<String> adjustedEmojis,
                                  Multimap<String, String> addedKeywords,
                                  Multimap<String, String> adjustedKeywords,
                                  Multimap<String, String> existingKeywords,
@@ -71,7 +75,7 @@ public class AlertService {
             builder.append("All emojis and keywords already exist as is. No changes have been made.")
                     .append(System.lineSeparator());
         } else {
-            builder.append(buildAddedEmojisAlertMessage(addedEmojis, existingEmojis));
+            builder.append(buildAddedEmojisAlertMessage(addedEmojis, existingEmojis, adjustedEmojis));
 
             if (!addedKeywords.isEmpty()) {
                 for (String emoji : addedKeywords.keySet()) {
@@ -127,19 +131,28 @@ public class AlertService {
         send(message, channel);
     }
 
-    private String buildAddedEmojisAlertMessage(List<String> addedEmojis, List<String> existingEmojis) {
+    private String buildAddedEmojisAlertMessage(List<String> addedEmojis,
+                                                List<String> existingEmojis,
+                                                List<String> adjustedEmojis) {
         StringBuilder builder = new StringBuilder();
 
-        if (!addedEmojis.isEmpty()) {
-            builder.append("emojis added: ").append(StringListImpl.create(addedEmojis).toSeparatedString(", "))
-                    .append(System.lineSeparator());
+        if (!addedEmojis.isEmpty() || !adjustedEmojis.isEmpty()) {
+            if (!addedEmojis.isEmpty()) {
+                builder.append("emojis added: ").append(StringListImpl.create(addedEmojis).toSeparatedString(", "))
+                        .append(System.lineSeparator());
+            }
 
             if (!existingEmojis.isEmpty()) {
                 builder.append("emojis already exist: ").append(StringListImpl.create(existingEmojis).toSeparatedString(", "))
                         .append(System.lineSeparator());
             }
+
+            if (!adjustedEmojis.isEmpty()) {
+                builder.append("random flag adjusted on emojis: ").append(StringListImpl.create(adjustedEmojis).toString())
+                        .append(System.lineSeparator());
+            }
         } else {
-            builder.append("All emojis already exist.").append(System.lineSeparator());
+            builder.append("All emojis already exist as is.").append(System.lineSeparator());
         }
 
         return builder.toString();

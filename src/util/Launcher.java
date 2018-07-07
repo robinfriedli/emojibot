@@ -1,5 +1,6 @@
 package util;
 
+import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
 import core.EmojiLoadingService;
@@ -102,8 +103,8 @@ public class Launcher {
     }
 
     private static void addEmojis() {
-        System.out.println("Type '\"emoji1, emoji2\"' to add emojis. " +
-                "Or type '\"emoji1, emoji2\" \"keyword1, keyword2\" \"true false\"' to add emojis with keywords " +
+        System.out.println("Type '\"emoji1, emoji2\" (optional: \"true, false\")' to add emojis.\n" +
+                "Or type '\"emoji1, emoji2\" (optional: \"true, false\") \"keyword1, keyword2\" \"true false\"' to add emojis with keywords " +
                 "or adjust replace value of existing keyword");
         System.out.print(System.lineSeparator());
 
@@ -133,12 +134,30 @@ public class Launcher {
     private static void listEmojis() {
         EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
         List<Emoji> emojis = emojiLoadingService.loadEmojis();
+        List<DiscordEmoji> discordEmojis = emojiLoadingService.loadDiscordEmojis();
         StringBuilder builder = new StringBuilder();
 
         for (Emoji emoji : emojis) {
-            builder.append(emoji.getEmojiValue());
+            builder.append(emoji.getEmojiValue()).append("\trandom: ").append(emoji.isRandom());
 
             List<Keyword> keywords = emoji.getKeywords();
+            for (int i = 0; i < keywords.size(); i++) {
+                if (i == 0) builder.append("\t");
+
+                builder.append(keywords.get(i).getKeywordValue()).append(" (").append(keywords.get(i).isReplace()).append(")");
+
+                if (i < keywords.size() - 1) builder.append(", ");
+            }
+
+            builder.append(System.lineSeparator());
+        }
+
+        if (!discordEmojis.isEmpty()) builder.append("Emojis from guilds:").append(System.lineSeparator());
+        for (DiscordEmoji discordEmoji : discordEmojis) {
+            builder.append(discordEmoji.getName()).append("\t").append(discordEmoji.getGuildName())
+                    .append("\trandom: ").append(discordEmoji.isRandom());
+
+            List<Keyword> keywords = discordEmoji.getKeywords();
             for (int i = 0; i < keywords.size(); i++) {
                 if (i == 0) builder.append("\t");
 

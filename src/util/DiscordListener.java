@@ -237,16 +237,17 @@ public class DiscordListener extends ListenerAdapter {
 
         for (Emoji emoji : emojis) {
             StringBuilder builder = new StringBuilder();
-            builder.append(emoji.getEmojiValue());
+            builder.append(emoji.getEmojiValue()).append("\trandom: ").append(emoji.isRandom());
 
             outputParts = listKeywords(emoji, builder, outputParts);
         }
 
-        outputParts.add("Emojis from guilds:\n");
+        if (!discordEmojis.isEmpty()) outputParts.add("Emojis from guilds:\n");
         for (DiscordEmoji discordEmoji : discordEmojis) {
             StringBuilder builder = new StringBuilder();
-            builder.append(discordEmoji.getEmojiValue());
-            builder.append("\t").append(discordEmoji.getGuildName());
+            builder.append(discordEmoji.getEmojiValue())
+                    .append("\t").append(discordEmoji.getGuildName())
+                    .append("\t").append("random: ").append(discordEmoji.isRandom());
 
             outputParts = listKeywords(discordEmoji, builder, outputParts);
         }

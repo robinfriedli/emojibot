@@ -34,7 +34,9 @@ public class EmojiLoadingService {
             if (emoji.getNodeType() == Node.ELEMENT_NODE) {
                 Element elem = (Element) emoji;
                 String emojiValue = elem.getAttribute("value");
-                emojis.add(new Emoji(getKeywords(elem), emojiValue));
+                String randomValue = elem.getAttribute("random");
+                boolean random = randomValue.equals("") || Boolean.parseBoolean(randomValue);
+                emojis.add(new Emoji(getKeywords(elem), emojiValue, random));
             }
         }
 
@@ -55,7 +57,9 @@ public class EmojiLoadingService {
                 String guildId = elem.getAttribute("guildId");
                 String guildName = elem.getAttribute("guildName");
                 String emojiValue = elem.getAttribute("value");
-                emojis.add(new DiscordEmoji(getKeywords(elem), emojiValue, name, guildId, guildName));
+                String randomValue = elem.getAttribute("random");
+                boolean random = randomValue.equals("") || Boolean.parseBoolean(randomValue);
+                emojis.add(new DiscordEmoji(getKeywords(elem), emojiValue, random, name, guildId, guildName));
             }
         }
 

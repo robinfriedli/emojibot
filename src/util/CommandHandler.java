@@ -1,16 +1,12 @@
 package util;
 
-import api.DiscordEmoji;
-import api.Emoji;
-import api.Keyword;
-import api.StringListImpl;
+import api.*;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import core.EmojiAddingService;
 import core.EmojiLoadingService;
-import net.dv8tion.jda.core.entities.Emote;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.MessageChannel;
 
@@ -38,36 +34,21 @@ public class CommandHandler {
         EmojiAddingService emojiAddingService = new EmojiAddingService();
         List<Integer> quotations = findQuotations(command);
 
-        //if following syntax is used: +e "emoji1, emoji2"
-        if (quotations.size() == 2) {
-            String emojisToAdd = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
+        //for adding raw emojis with optional random tag (default value: true)
+        if (quotations.size() == 2 || quotations.size() == 4) {
+            String emojisToAdd = command.substring(quotations.get(0) + 1, quotations.get(1));
             List<String> emojiList = filterColons(Lists.newArrayList(emojisToAdd.split(", ")));
+            StringList randomTags = StringListImpl.create();
             List<String> discordEmojis = Lists.newArrayList();
 
-            if (guild != null) {
-                discordEmojis = filterDiscordEmojis(emojiList, guild);
-                if (!discordEmojis.isEmpty()) {
-                    emojiList.removeAll(discordEmojis);
-                }
+            if (quotations.size() == 4) {
+                List<String> randomArgs = Lists.newArrayList(command.substring(quotations.get(2) + 1, quotations.get(3)));
+                randomTags.addAll(randomArgs);
             }
 
-            emojiAddingService.addEmojis(emojiList, discordEmojis, channel, guild);
-        }
-
-        //if following syntax is used: +e "emoji1, emoji2" "keyword1, keyword2" "true, false"
-        else if (quotations.size() == 6) {
-            String emojis = command.substring(quotations.get(0) + 1, quotations.get(1));
-            String keywords = command.substring(quotations.get(2) + 1, quotations.get(3));
-            String replaceTags = command.substring(quotations.get(4) + 1, quotations.get(5));
-
-            List<String> emojiList = filterColons(Lists.newArrayList(emojis.split(", ")));
-            List<String> discordEmojis = Lists.newArrayList();
-            String[] keywordList = keywords.split(", ");
-            String[] replaceTagList = replaceTags.split(", ");
-
-            if (Arrays.stream(replaceTagList).allMatch(s -> s.equals("true") || s.equals("false"))
-                    && keywordList.length == replaceTagList.length
-                    && Arrays.stream(keywordList).allMatch(k -> k.equals(k.toLowerCase()))) {
+            if (randomTags.isEmpty()
+                    || (randomTags.size() == emojiList.size()
+                    && randomTags.stream().allMatch(t -> t.equals("false") || t.equals("true")))) {
 
                 if (guild != null) {
                     discordEmojis = filterDiscordEmojis(emojiList, guild);
@@ -76,15 +57,56 @@ public class CommandHandler {
                     }
                 }
 
-                emojiAddingService.addEmojis(emojiList, discordEmojis, keywordList, replaceTagList, channel, guild);
+                emojiAddingService.addEmojis(emojiList, discordEmojis, randomTags, channel, guild);
+            } else {
+                alertService.send("Random tags must be either 'true' or 'false'", channel);
+            }
+        }
+
+        //for adding emojis with keywords with replace tags for the keywords and optional random tags for the emojis
+        else if (quotations.size() == 6 || quotations.size() == 8) {
+            int keywordsIndex = quotations.size() == 8 ? 4 : 2;
+            int replaceTagsIndex = quotations.size() == 8 ? 6 : 4;
+
+            String emojis = command.substring(quotations.get(0) + 1, quotations.get(1));
+            String keywords = command.substring(quotations.get(keywordsIndex) + 1, quotations.get(keywordsIndex + 1));
+            String replaceTags = command.substring(quotations.get(replaceTagsIndex) + 1, quotations.get(replaceTagsIndex + 1));
+
+            List<String> emojiList = filterColons(Lists.newArrayList(emojis.split(", ")));
+            List<String> discordEmojis = Lists.newArrayList();
+            StringList randomTags = StringListImpl.create();
+            String[] keywordList = keywords.split(", ");
+            String[] replaceTagList = replaceTags.split(", ");
+
+            if (quotations.size() == 8) {
+                List<String> randomArgs = Lists.newArrayList(command.substring(quotations.get(2) + 1, quotations.get(3)));
+                randomTags.addAll(randomArgs);
+            }
+
+            if (Arrays.stream(replaceTagList).allMatch(s -> s.equals("true") || s.equals("false"))
+                    && keywordList.length == replaceTagList.length
+                    && Arrays.stream(keywordList).allMatch(k -> k.equals(k.toLowerCase()))
+                    && (randomTags.isEmpty()
+                    || (randomTags.size() == emojiList.size()
+                    && randomTags.stream().allMatch(t -> t.equals("false") || t.equals("true"))))) {
+
+                if (guild != null) {
+                    discordEmojis = filterDiscordEmojis(emojiList, guild);
+                    if (!discordEmojis.isEmpty()) {
+                        emojiList.removeAll(discordEmojis);
+                    }
+                }
+
+                emojiAddingService.addEmojis(emojiList, discordEmojis, randomTags, keywordList, replaceTagList, channel, guild);
             } else {
                 StringBuilder builder = new StringBuilder();
 
                 builder.append("There has to be one replace flag for each keyword").append(System.lineSeparator())
                         .append("Replace tag has to be either 'true' or 'false'").append(System.lineSeparator())
-                        .append("Keywords have to be lower case").append(System.lineSeparator());
+                        .append("Keywords have to be lower case").append(System.lineSeparator())
+                        .append("There has to be one random flag for each emoji or no random flag at all");
 
-                if (channel != null) builder.append("See 'e!help'");
+                if (channel != null) builder.append(System.lineSeparator()).append("See 'e!help'");
 
                 alertService.send(builder.toString(), channel);
             }
@@ -173,8 +195,10 @@ public class CommandHandler {
                 .findAny();
 
         if (optionalEmoji.isPresent()) {
-            responseBuilder.append("\"").append(searchTerm).append("\"").append(" is an emoji.");
-            List<Keyword> keywordsOfEmoji = optionalEmoji.get().getKeywords();
+            Emoji emoji = optionalEmoji.get();
+            responseBuilder.append("\"").append(searchTerm).append("\"").append(" (random: ").append(emoji.isRandom())
+                    .append(") ").append(" is an emoji.");
+            List<Keyword> keywordsOfEmoji = emoji.getKeywords();
 
             if (!keywordsOfEmoji.isEmpty()) {
                 responseBuilder.append(" With following keywords:").append(System.lineSeparator());
@@ -209,12 +233,9 @@ public class CommandHandler {
         if (optionalDiscordEmoji.isPresent()) {
             DiscordEmoji discordEmoji = optionalDiscordEmoji.get();
             List<Keyword> keywordsOnEmoji = discordEmoji.getKeywords();
-            String foundEmojis = guild != null ?
-                    StringListImpl.create(guild.getEmotesByName(searchTerm, true).stream()
-                            .map(Emote::getAsMention).collect(Collectors.toList())).toString()
-                    : "";
 
-            responseBuilder.append("\"").append(foundEmojis).append("\"").append(" is an emoji on guild ")
+            responseBuilder.append("\"").append(discordEmoji.getEmojiValue()).append("\"").append(" (random: ")
+                    .append(discordEmoji.isRandom()).append(") ").append(" is an emoji on guild ")
                     .append(discordEmoji.getGuildName()).append(System.lineSeparator());
 
             if (!keywordsOnEmoji.isEmpty()) {

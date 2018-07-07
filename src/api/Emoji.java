@@ -9,10 +9,12 @@ public class Emoji {
 
     private List<Keyword> keywords;
     private String emojiValue;
+    private boolean random;
 
-    public Emoji(List<Keyword> keywords, String emojiValue) {
+    public Emoji(List<Keyword> keywords, String emojiValue, boolean random) {
         this.keywords = keywords;
         this.emojiValue = emojiValue;
+        this.random = random;
     }
 
     public List<Keyword> getKeywords() {
@@ -53,6 +55,14 @@ public class Emoji {
 
     public void setEmojiValue(String emoji) {
         this.emojiValue = emoji;
+    }
+
+    public boolean isRandom() {
+        return this.random;
+    }
+
+    public void setRandom(boolean random) {
+        this.random = random;
     }
 
     public static List<Keyword> getAllKeywords(List<? extends Emoji> emojis) {

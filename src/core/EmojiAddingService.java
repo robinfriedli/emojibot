@@ -1,5 +1,6 @@
 package core;
 
+import api.StringList;
 import api.StringListImpl;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -30,6 +31,7 @@ public class EmojiAddingService {
 
     public void addEmojis(List<String> emojis,
                           List<String> discordEmojis,
+                          StringList randomTags,
                           @Nullable MessageChannel channel,
                           @Nullable Guild guild) {
         Document doc = emojiLoadingService.getDocument();
@@ -37,33 +39,61 @@ public class EmojiAddingService {
 
         List<String> addedEmojis = Lists.newArrayList();
         List<String> existingEmojis = Lists.newArrayList();
+        List<String> adjustedEmojis = Lists.newArrayList();
 
-        for (String emoji : emojis) {
+        for (int i = 0; i < emojis.size(); i++) {
+            String emoji = emojis.get(i);
             if (!emojiExists(doc, emoji)) {
                 Element emojiElem = doc.createElement("emoji");
                 emojiElem.setAttribute("value", emoji);
+                if (randomTags.tryGet(i) != null) emojiElem.setAttribute("random", randomTags.tryGet(i));
                 rootElem.appendChild(emojiElem);
 
                 addedEmojis.add(emoji);
             } else {
+                Element emojiElem = getEmojiElem(doc, emoji);
+                String randomTag = emojiElem.getAttribute("random");
+                if (!randomTags.isEmpty()) {
+                    boolean random = randomTag.equals("") || Boolean.parseBoolean(randomTag);
+                    boolean newRandom = Boolean.parseBoolean(randomTags.tryGet(i));
+                    if (random == newRandom) {
+                        existingEmojis.add(emoji);
+                    } else {
+                        emojiElem.setAttribute("random", randomTags.tryGet(i));
+                        adjustedEmojis.add(emoji);
+                    }
+                }
                 existingEmojis.add(emoji);
             }
         }
 
         if (guild != null) {
-            for (String name : discordEmojis) {
-                for (Emote emote : guild.getEmotesByName(name, true)) {
+            for (int i = 0; i < discordEmojis.size(); i++) {
+                String emojiName = discordEmojis.get(i);
+                for (Emote emote : guild.getEmotesByName(emojiName, true)) {
                     String emojiValue = emote.getAsMention();
                     if (!discordEmojiExists(doc, emojiValue)) {
                         Element emojiElem = doc.createElement("discord-emoji");
                         emojiElem.setAttribute("value", emojiValue);
-                        emojiElem.setAttribute("name", name);
+                        emojiElem.setAttribute("name", emojiName);
                         emojiElem.setAttribute("guildId", guild.getId());
                         emojiElem.setAttribute("guildName", guild.getName());
                         rootElem.appendChild(emojiElem);
 
                         addedEmojis.add(emojiValue);
                     } else {
+                        Element emojiElem = getDiscordEmojiElem(doc, emojiValue);
+                        String randomTag = emojiElem.getAttribute("random");
+                        if (!randomTags.isEmpty()) {
+                            boolean random = randomTag.equals("") || Boolean.parseBoolean(randomTag);
+                            boolean newRandom = Boolean.parseBoolean(randomTags.tryGet(i));
+                            if (random == newRandom) {
+                                existingEmojis.add(emojiValue);
+                            } else {
+                                emojiElem.setAttribute("random", randomTags.tryGet(i));
+                                adjustedEmojis.add(emojiValue);
+                            }
+                        }
                         existingEmojis.add(emojiValue);
                     }
                 }
@@ -71,11 +101,12 @@ public class EmojiAddingService {
         }
 
         writeToFile(doc);
-        alertService.alertAddedEmojis(addedEmojis, existingEmojis, channel);
+        alertService.alertAddedEmojis(addedEmojis, existingEmojis, adjustedEmojis, channel);
     }
 
     public void addEmojis(List<String> emojis,
                           List<String> discordEmojis,
+                          StringList randomTags,
                           String[] keywords,
                           String[] replaceTags,
                           @Nullable MessageChannel channel,
@@ -85,45 +116,58 @@ public class EmojiAddingService {
 
         List<String> addedEmojis = Lists.newArrayList();
         List<String> existingEmojis = Lists.newArrayList();
+        List<String> adjustedEmojis = Lists.newArrayList();
         Multimap<String, String> addedKeywords = HashMultimap.create();
         Multimap<String, String> existingKeywords = HashMultimap.create();
         Multimap<String, String> adjustedKeywords = HashMultimap.create();
 
-        for (String emoji : emojis) {
+        for (int i = 0; i < emojis.size(); i++) {
+            String emoji = emojis.get(i);
             Element emojiElem;
 
             //only create new emoji if there isn't one with the same value, else load the existing emoji
             if (!emojiExists(doc, emoji)) {
                 emojiElem = doc.createElement("emoji");
                 emojiElem.setAttribute("value", emoji);
+                if (!randomTags.isEmpty()) emojiElem.setAttribute("random", randomTags.tryGet(i));
 
                 addedEmojis.add(emoji);
             } else {
                 emojiElem = getEmojiElem(doc, emoji);
-
+                String randomTag = emojiElem.getAttribute("random");
+                if (!randomTags.isEmpty()) {
+                    boolean random = randomTag.equals("") || Boolean.parseBoolean(randomTag);
+                    boolean newRandom = Boolean.parseBoolean(randomTags.tryGet(i));
+                    if (random == newRandom) {
+                        existingEmojis.add(emoji);
+                    } else {
+                        emojiElem.setAttribute("random", randomTags.tryGet(i));
+                        adjustedEmojis.add(emoji);
+                    }
+                }
                 existingEmojis.add(emoji);
             }
 
-            for (int i = 0; i < keywords.length; i++) {
+            for (int j = 0; j < keywords.length; j++) {
                 Element keywordElem;
 
                 //only create new keyword if it doesn't already exist on the same emoji, else load existing keyword
                 // and adjust replace flag
-                if (!keywordExists(emojiElem, keywords[i])) {
+                if (!keywordExists(emojiElem, keywords[j])) {
                     keywordElem = doc.createElement("keyword");
-                    keywordElem.setAttribute("replace", replaceTags[i]);
-                    keywordElem.setTextContent(keywords[i]);
+                    keywordElem.setAttribute("replace", replaceTags[j]);
+                    keywordElem.setTextContent(keywords[j]);
 
-                    addedKeywords.put(emoji, keywords[i]);
+                    addedKeywords.put(emoji, keywords[j]);
                 } else {
-                    keywordElem = getKeywordElem(emojiElem, keywords[i]);
+                    keywordElem = getKeywordElem(emojiElem, keywords[j]);
 
-                    if (!keywordElem.getAttribute("replace").equals(replaceTags[i])) {
-                        keywordElem.setAttribute("replace", replaceTags[i]);
+                    if (!keywordElem.getAttribute("replace").equals(replaceTags[j])) {
+                        keywordElem.setAttribute("replace", replaceTags[j]);
 
-                        adjustedKeywords.put(emoji, keywords[i]);
+                        adjustedKeywords.put(emoji, keywords[j]);
                     } else {
-                        existingKeywords.put(emoji, keywords[i]);
+                        existingKeywords.put(emoji, keywords[j]);
                     }
                 }
 
@@ -134,43 +178,54 @@ public class EmojiAddingService {
         }
 
         if (guild != null) {
-            for (String name : discordEmojis) {
-                for (Emote emote : guild.getEmotesByName(name, true)) {
+            for (int i = 0; i < discordEmojis.size(); i++) {
+                String emojiName = discordEmojis.get(i);
+                for (Emote emote : guild.getEmotesByName(emojiName, true)) {
                     String emojiValue = emote.getAsMention();
                     Element emojiElem;
 
                     if (!discordEmojiExists(doc, emojiValue)) {
                         emojiElem = doc.createElement("discord-emoji");
                         emojiElem.setAttribute("value", emojiValue);
-                        emojiElem.setAttribute("name", name);
+                        emojiElem.setAttribute("name", emojiName);
                         emojiElem.setAttribute("guildId", guild.getId());
                         emojiElem.setAttribute("guildName", guild.getName());
 
                         addedEmojis.add(emojiValue);
                     } else {
                         emojiElem = getDiscordEmojiElem(doc, emojiValue);
-
+                        String randomTag = emojiElem.getAttribute("random");
+                        if (!randomTags.isEmpty()) {
+                            boolean random = randomTag.equals("") || Boolean.parseBoolean(randomTag);
+                            boolean newRandom = Boolean.parseBoolean(randomTags.tryGet(i));
+                            if (random == newRandom) {
+                                existingEmojis.add(emojiValue);
+                            } else {
+                                emojiElem.setAttribute("random", randomTags.tryGet(i));
+                                adjustedEmojis.add(emojiValue);
+                            }
+                        }
                         existingEmojis.add(emojiValue);
                     }
 
-                    for (int i = 0; i < keywords.length; i++) {
+                    for (int j = 0; j < keywords.length; j++) {
                         Element keywordElem;
 
-                        if (!keywordExists(emojiElem, keywords[i])) {
+                        if (!keywordExists(emojiElem, keywords[j])) {
                             keywordElem = doc.createElement("keyword");
-                            keywordElem.setAttribute("replace", replaceTags[i]);
-                            keywordElem.setTextContent(keywords[i]);
+                            keywordElem.setAttribute("replace", replaceTags[j]);
+                            keywordElem.setTextContent(keywords[j]);
 
-                            addedKeywords.put(emojiValue, keywords[i]);
+                            addedKeywords.put(emojiValue, keywords[j]);
                         } else {
-                            keywordElem = getKeywordElem(emojiElem, keywords[i]);
+                            keywordElem = getKeywordElem(emojiElem, keywords[j]);
 
-                            if (!keywordElem.getAttribute("replace").equals(replaceTags[i])) {
-                                keywordElem.setAttribute("replace", replaceTags[i]);
+                            if (!keywordElem.getAttribute("replace").equals(replaceTags[j])) {
+                                keywordElem.setAttribute("replace", replaceTags[j]);
 
-                                adjustedKeywords.put(emojiValue, keywords[i]);
+                                adjustedKeywords.put(emojiValue, keywords[j]);
                             } else {
-                                existingKeywords.put(emojiValue, keywords[i]);
+                                existingKeywords.put(emojiValue, keywords[j]);
                             }
                         }
 
@@ -183,7 +238,7 @@ public class EmojiAddingService {
         }
 
         writeToFile(doc);
-        alertService.alertAddedEmojis(addedEmojis, existingEmojis, addedKeywords, adjustedKeywords, existingKeywords, channel);
+        alertService.alertAddedEmojis(addedEmojis, existingEmojis, adjustedEmojis, addedKeywords, adjustedKeywords, existingKeywords, channel);
     }
 
     public void removeEmojis(List<String> emojisToRemove,
@@ -322,6 +377,12 @@ public class EmojiAddingService {
                     otherEmojis.add(emojiElem);
                 }
             }
+
+            //set random attribute, false if all of them are false
+            Boolean random = otherEmojis.stream()
+                    .anyMatch(e -> e.getAttribute("random").equals("")
+                            || Boolean.parseBoolean(e.getAttribute("random")));
+            newEmoji.setAttribute("random", random.toString());
 
             //get keywords of those emojis and remove them after
             for (Element otherEmoji : otherEmojis) {

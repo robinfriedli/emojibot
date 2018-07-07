@@ -15,6 +15,7 @@
             <xs:element name="keyword" type="keyword"/>
         </xs:sequence>
         <xs:attribute name="value" type="xs:string" use="required"/>
+        <xs:attribute name="random" type="xs:boolean" default="true"/>
     </xs:complexType>
 
     <xs:element name="discord-emoji" type="discord-emoji"/>
@@ -23,6 +24,7 @@
             <xs:element name="keyword" type="keyword"/>
         </xs:sequence>
         <xs:attribute name="value" type="xs:string"/>
+        <xs:attribute name="random" type="xs:boolean" default="true"/>
         <xs:attribute name="name" type="xs:string"/>
         <xs:attribute name="guildId" type="xs:string"/>
         <xs:attribute name="guildName" type="xs:string"/>

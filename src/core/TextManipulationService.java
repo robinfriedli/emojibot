@@ -155,12 +155,15 @@ public class TextManipulationService {
 
         //replace all spaces with emojis
         StringList strings = StringListImpl.charsToList(input);
+        List<Emoji> randomEmojis = emojis.stream().filter(Emoji::isRandom).collect(Collectors.toList());
 
-        List<Integer> spacePositions = findOccurrences(input, " ");
-        for (int pos : spacePositions) {
-            int rand = ThreadLocalRandom.current().nextInt(0, emojis.size());
-            String emojiSpace = String.format(" %s ", emojis.get(rand).getEmojiValue());
-            strings.set(pos, emojiSpace);
+        if (!randomEmojis.isEmpty()) {
+            List<Integer> spacePositions = findOccurrences(input, " ");
+            for (int pos : spacePositions) {
+                int rand = ThreadLocalRandom.current().nextInt(0, randomEmojis.size());
+                String emojiSpace = String.format(" %s ", randomEmojis.get(rand).getEmojiValue());
+                strings.set(pos, emojiSpace);
+            }
         }
 
         input = strings.toString();

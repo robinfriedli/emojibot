@@ -35,16 +35,23 @@ ________________________________________________________________________________
 
     Syntax:
     `e!add "emoji1, emoji2"`
+    or `e!add "emoji1, emoji2" "false, true"`
+
+    Notice:
+    The optional random flags at the end define whether the specified emoji will randomly be placed between words.
+    In this case emoji1 will not and emoji2 will be randomly placed
+    Default value is 'true'.
 
 ### Add emojis with keywords or adjust replace flag of existing keywords:
 
     Syntax:
     `e!add "emioji1, emoji2" "keyword1, keyword2" "true, false"`
+    or `e!add "emoji1, emoji2" "false, true" "keyword1, keyword2" "true, false"`
 
     Notice:
-    true or false defines whether the keywords gets replaced (true) or
-    the emoji gets placed after the keyword (false)
-    in this instance keyword1 would get replaced and keyword2 wouldn't.
+    The optional first set of flags (true/false) defines whether the specified emoji will randomly be placed between words. Default is 'true'
+    The mandatory second set of flags defines whether the keywords gets replaced (true) or the emoji gets placed after the keyword (false)
+    In this instance keyword1 would get replaced and keyword2 wouldn't.
     All keywords will be applied to all emojis.
     Keywords MUST be lower case.
 

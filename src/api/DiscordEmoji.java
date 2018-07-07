@@ -9,8 +9,8 @@ public class DiscordEmoji extends Emoji {
     private String guildId;
     private String guildName;
 
-    public DiscordEmoji(List<Keyword> keywords, String value, String name, String guildId, String guildName) {
-        super(keywords, value);
+    public DiscordEmoji(List<Keyword> keywords, String value, boolean random, String name, String guildId, String guildName) {
+        super(keywords, value, random);
         this.name = name;
         this.guildId = guildId;
         this.guildName = guildName;

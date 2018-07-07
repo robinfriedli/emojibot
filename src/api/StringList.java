@@ -1,5 +1,6 @@
 package api;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
@@ -15,6 +16,16 @@ public interface StringList extends Iterable<String> {
      * @return value at index
      */
     String get(int i);
+
+    /**
+     * tries to return the value at the specified index and returns null instead of throwing and error
+     * when out of bounds
+     *
+     * @param index of value
+     * @return value at index or null
+     */
+    @Nullable
+    String tryGet(int index);
 
     /**
      * @return true if StringList has no values

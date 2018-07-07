@@ -28,6 +28,14 @@ public class StringListImpl implements StringList {
     }
 
     @Override
+    public String tryGet(int i) {
+        if (i < size()) {
+            return get(i);
+        }
+        return null;
+    }
+
+    @Override
     public boolean isEmpty() {
         return values.isEmpty();
     }
