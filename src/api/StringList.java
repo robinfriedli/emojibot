@@ -1,6 +1,7 @@
 package api;
 
 import javax.annotation.Nullable;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
@@ -132,5 +133,11 @@ public interface StringList extends Iterable<String> {
      * @return stream for StringList values
      */
     Stream<String> stream();
+
+
+    /**
+     * Retain values that only contain letters
+     */
+    StringList filterWords();
 
 }

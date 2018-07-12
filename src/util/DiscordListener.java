@@ -1,10 +1,15 @@
 package util;
 
-import api.*;
+import java.util.List;
+
+import javax.security.auth.login.LoginException;
+
+import api.DiscordEmoji;
+import api.Emoji;
+import api.Keyword;
 import com.google.common.collect.Lists;
 import core.EmojiLoadingService;
 import core.TextLoadingService;
-import core.TextManipulationService;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
@@ -14,19 +19,16 @@ import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
-import javax.security.auth.login.LoginException;
-import java.util.Arrays;
-import java.util.List;
-
 public class DiscordListener extends ListenerAdapter {
 
-    private static final String COMMAND_TRANSFORM = "e!e";
-    private static final String COMMAND_ADD = "e!add";
-    private static final String COMMAND_RM = "e!rm";
-    private static final String COMMAND_HELP = "e!help";
-    private static final String COMMAND_LIST = "e!list";
-    private static final String COMMAND_SEARCH = "e!search";
-    private static final String COMMAND_CLEAN = "e!clean";
+    public static final String COMMAND_TRANSFORM = "e!e";
+    public static final String COMMAND_ADD = "e!add";
+    public static final String COMMAND_RM = "e!rm";
+    public static final String COMMAND_HELP = "e!help";
+    public static final String COMMAND_LIST = "e!list";
+    public static final String COMMAND_SEARCH = "e!search";
+    public static final String COMMAND_CLEAN = "e!clean";
+    public static final String COMMAND_SETTINGS = "e!settings";
 
     private final CommandHandler commandHandler;
 
@@ -37,10 +39,10 @@ public class DiscordListener extends ListenerAdapter {
     public void launch() {
         try {
             new JDABuilder(AccountType.BOT)
-                    .setToken(TextLoadingService.loadToken())
-                    .addEventListener(this)
-                    .buildBlocking()
-                    .getPresence().setGame(Game.playing(COMMAND_HELP));
+                .setToken(TextLoadingService.loadToken())
+                .addEventListener(this)
+                .buildBlocking()
+                .getPresence().setGame(Game.playing(COMMAND_HELP));
         } catch (LoginException | InterruptedException e) {
             e.printStackTrace();
         }
@@ -52,34 +54,42 @@ public class DiscordListener extends ListenerAdapter {
             Message message = event.getMessage();
             String msg = message.getContentDisplay();
 
-            if (msg.startsWith(COMMAND_TRANSFORM)) {
-                transformText(event.getGuild(), message, msg);
-            }
+            try {
+                if (msg.startsWith(COMMAND_TRANSFORM)) {
+                    transformText(msg, event);
+                }
 
-            if (msg.startsWith(COMMAND_ADD)) {
-                commandHandler.saveEmojis(msg, message.getChannel(), event.getGuild());
-            }
+                if (msg.startsWith(COMMAND_ADD)) {
+                    commandHandler.saveEmojis(msg, message.getChannel(), event.getGuild());
+                }
 
-            if (msg.startsWith(COMMAND_RM)) {
-                commandHandler.deleteEmojis(msg, message.getChannel(), event.getGuild());
-            }
+                if (msg.startsWith(COMMAND_RM)) {
+                    commandHandler.deleteEmojis(msg, message.getChannel(), event.getGuild());
+                }
 
-            //displays help.txt file
-            if (msg.equals(COMMAND_HELP)) {
-                MessageChannel channel = message.getChannel();
-                channel.sendMessage(TextLoadingService.loadHelp()).queue();
-            }
+                //displays help.txt file
+                if (msg.equals(COMMAND_HELP)) {
+                    MessageChannel channel = message.getChannel();
+                    channel.sendMessage(TextLoadingService.loadHelp()).queue();
+                }
 
-            if (msg.equals(COMMAND_LIST)) {
-                listEmojis(message.getChannel());
-            }
+                if (msg.equals(COMMAND_LIST)) {
+                    listEmojis(message.getChannel());
+                }
 
-            if (msg.startsWith(COMMAND_SEARCH)) {
-                searchQuery(message, msg, event.getGuild());
-            }
+                if (msg.startsWith(COMMAND_SEARCH)) {
+                    searchQuery(message, msg, event.getGuild());
+                }
 
-            if (msg.equals(COMMAND_CLEAN)) {
-                commandHandler.cleanXml(message.getChannel());
+                if (msg.equals(COMMAND_CLEAN)) {
+                    commandHandler.cleanXml(message.getChannel());
+                }
+
+                if (msg.startsWith(COMMAND_SETTINGS)) {
+                    commandHandler.handleSettings(msg, message.getChannel());
+                }
+            } catch (IllegalArgumentException e) {
+                message.getChannel().sendMessage(e.getMessage()).queue();
             }
 
         }
@@ -89,137 +99,11 @@ public class DiscordListener extends ListenerAdapter {
      * Replaces spaces with random emojis, replaces B with 🅱 and replaces keywords with emoji or adds emoji after keyword
      * depending on replace is true or false for corresponding keyword
      *
-     * @param guild
-     * @param message
-     * @param msg
+     * @param msg whole input string
+     * @param event
      */
-    private void transformText(Guild guild, Message message, String msg) {
-        MessageChannel channel = message.getChannel();
-
-        /*
-        Attempted to send profile picture of author as string along with the message.
-        Probably hopeless though, String obviously exceeds 2000 characters.
-        Also I'm fairly certain it doesn't work that way at all but I'm leaving it in because I wasted a lot of time on this
-
-        String userName = message.getAuthor().getName();
-        String avatarString = "";
-        try {
-            URLConnection connection = new URL(message.getAuthor().getAvatarUrl()).openConnection();
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:60.0) Gecko/20100101 Firefox/60.0");
-            connection.connect();
-            InputStream inputStream = connection.getInputStream();
-            BufferedImage avatar = ImageIO.read(inputStream);
-
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ImageIO.write(avatar, "png", bos);
-            byte[] imageBytes = bos.toByteArray();
-
-            BASE64Encoder encoder = new BASE64Encoder();
-            avatarString = encoder.encode(imageBytes);
-
-            bos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-
-        try {
-            message.delete().queue();
-        } catch (IllegalStateException e) {
-            e.printStackTrace();
-        }
-
-        String input = msg.substring(COMMAND_TRANSFORM.length() + 1, msg.length());
-        StringBuilder response = new StringBuilder();
-        boolean randFormat = false;
-
-        if (input.startsWith("-r ")) {
-            randFormat = true;
-            input = input.substring(3, input.length());
-        }
-
-        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-        List<Emoji> emojis = emojiLoadingService.loadEmojis();
-        List<DiscordEmoji> discordEmojis = emojiLoadingService.loadDiscordEmojis();
-        List<DiscordEmoji> selectedDiscordEmojis = DiscordEmoji.getForGuild(discordEmojis, guild.getId());
-        emojis.addAll(selectedDiscordEmojis);
-
-        TextManipulationService service = new TextManipulationService(randFormat, emojis, guild);
-
-        response.append("**").append(message.getAuthor().getName()).append(":").append("**").append(System.lineSeparator())
-                .append(service.getOutput(input));
-
-        String output = response.toString();
-        if (output.length() < 1000) {
-            channel.sendMessage(output).queue();
-        } else {
-            List<String> outputParts = separateMessage(output);
-            for (String part : outputParts) {
-                channel.sendMessage(part).queue();
-            }
-        }
-    }
-
-    private List<String> separateMessage(String message) {
-        List<String> outputParts = Lists.newArrayList();
-        //first split the message into paragraphs (Lists.newArrayList() because Arrays.asList returns immutable list)
-        StringList paragraphs = StringListImpl.separateString(message, "\n");
-
-        for (int i = 0; i < paragraphs.size(); i++) {
-            String paragraph = paragraphs.get(i);
-            if (paragraph.length() + System.lineSeparator().length() < 1000) {
-                //check that paragraph is not an empty line
-                if (notEmpty(paragraph)) {
-                    if (i < paragraphs.size() - 1) paragraph = paragraph + System.lineSeparator();
-                    outputParts.add(paragraph);
-                }
-            } else {
-                //if the paragraph is too long separate into sentences
-                StringList sentences = StringListImpl.separateString(paragraph, "\\. ");
-                for (String sentence : sentences) {
-                    //check if sentence is shorter than 2000 characters, else split into words
-                    if (sentence.length() < 1000) {
-                        //since we don't want to send a message for each sentence fill the same part until full
-                        outputParts = fillParts(outputParts, sentence);
-                    } else {
-                        //if sentence is longer than 2000 characters split into words
-                        StringList words = StringListImpl.separateString(sentence, " ");
-
-                        for (String word : words) {
-                            if (word.length() < 1000) {
-                                outputParts = fillParts(outputParts, word);
-                            } else {
-                                //this should never happen since discord does not allow you to send messages longer than
-                                // 2000 characters and if there are no spaces there are no emojis to make the text longer
-                                StringList chars = StringListImpl.charsToList(word);
-                                for (String charString : chars) {
-                                    outputParts = fillParts(outputParts, charString);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return outputParts;
-    }
-
-    private boolean notEmpty(String paragraph) {
-        Character[] chars = paragraph.chars().mapToObj(c -> (char) c).toArray(Character[]::new);
-        return Arrays.stream(chars).anyMatch(Character::isLetter);
-    }
-
-    private List<String> fillParts(List<String> outputParts, String s) {
-        if (outputParts.isEmpty()) outputParts.add("");
-        int currentPart = outputParts.size() - 1;
-
-        if (outputParts.get(currentPart).length() + s.length() < 1000) {
-            outputParts.set(currentPart, outputParts.get(currentPart) + s);
-        } else {
-            outputParts.add(s);
-        }
-
-        return outputParts;
+    private void transformText(String msg, MessageReceivedEvent event) {
+        commandHandler.transformText(msg.substring(COMMAND_TRANSFORM.length() + 1, msg.length()), event);
     }
 
     /**
@@ -246,8 +130,8 @@ public class DiscordListener extends ListenerAdapter {
         for (DiscordEmoji discordEmoji : discordEmojis) {
             StringBuilder builder = new StringBuilder();
             builder.append(discordEmoji.getEmojiValue())
-                    .append("\t").append(discordEmoji.getGuildName())
-                    .append("\t").append("random: ").append(discordEmoji.isRandom());
+                .append("\t").append(discordEmoji.getGuildName())
+                .append("\t").append("random: ").append(discordEmoji.isRandom());
 
             outputParts = listKeywords(discordEmoji, builder, outputParts);
         }
