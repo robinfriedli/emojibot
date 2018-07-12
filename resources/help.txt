@@ -1,4 +1,8 @@
-Transform text into emojitext: 'e!e text' or 'e!e -r text' to enable random markdown formatting
+Transform text into emojitext: 'e!e text' or 'e!e -arg1 -arg2 "text"'
+
+    Notice:
+    arguments set property to the opposite of what's in the settings
+    args: -rf (random formatting), -re (random emojis), -rb (replace b with 🅱️)
 
 List all saved emojis: e!list
 
@@ -9,7 +13,6 @@ Add emojis: e!add "emoji1, emoji2" or e!add "emoji1, emoji2" "false, true"
     Notice:
     The optional random flags at the end define whether the specified emoji
     will randomly be placed between words.
-    In this case emoji1 will not and emoji2 will be randomly placed
     Default value is 'true'.
 
 Add emojis with keywords or adjust replace flag of existing keywords:
@@ -23,9 +26,6 @@ Add emojis with keywords or adjust replace flag of existing keywords:
     will randomly be placed between words. Default is 'true'
     The mandatory second set of flags defines whether the keywords gets replaced (true) or
     the emoji gets placed after the keyword (false)
-    in this instance keyword1 would get replaced and keyword2 wouldn't.
-    All keywords will be applied to all emojis.
-    Keywords MUST be lower case.
 
 Remove emojis: e!rm "emoji1, emoji2"
 
@@ -39,6 +39,12 @@ Merge duplicate emojis and duplicate keywords on the same emoji: e!clean
     Notice: emojis and keywords can only duplicate if manually meddling with the xml file,
     the bot does not duplicate anything
     when merging keywords the replace flag is set to true if all keywords are true
+
+Settings:
+
+    e!settings: show all settings
+    e!settings "REPLACE_B": show value of property
+    e!settings "REPLACE_B" "true": adjust value of property
 
 To copy paste emojis see https://emojipedia.org
 

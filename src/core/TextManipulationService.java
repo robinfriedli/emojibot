@@ -21,17 +21,21 @@ import java.util.stream.Collectors;
 public class TextManipulationService {
 
     private final boolean randFormat;
+    private final boolean randEmojis;
+    private final boolean replaceB;
     private final List<Emoji> emojis;
     private final List<Keyword> keywords;
     private final Guild guild;
 
     private static List<String> wrappersStart =
-            ImmutableList.of("_", "**", "***", "__", "__*", "__**", "__***", "~~");
+        ImmutableList.of("_", "**", "***", "__", "__*", "__**", "__***", "~~");
     private static List<String> wrappersEnd =
-            ImmutableList.of("_", "**", "***", "__", "*__", "**__", "***__", "~~");
+        ImmutableList.of("_", "**", "***", "__", "*__", "**__", "***__", "~~");
 
-    public TextManipulationService(boolean randFormat, List<Emoji> emojis, Guild guild) {
+    public TextManipulationService(boolean randFormat, boolean randEmojis, boolean replaceB, List<Emoji> emojis, Guild guild) {
         this.randFormat = randFormat;
+        this.randEmojis = randEmojis;
+        this.replaceB = replaceB;
         this.emojis = emojis;
         this.keywords = Emoji.getAllKeywords(emojis);
         this.guild = guild;
@@ -105,9 +109,9 @@ public class TextManipulationService {
     private boolean isFullWord(String input, int start, int end) {
         Pattern letters = Pattern.compile("[A-Za-zÀ-ÿ]");
         return (start == 0 || !letters.matcher(Character.toString(input.charAt(start - 1))).matches())
-                && (end == input.length() || !letters.matcher(Character.toString(input.charAt(end))).matches()
-                && (start == 0 || !Character.toString(input.charAt(start - 1)).equals(":"))
-                && !Character.toString(input.charAt(end)).equals(":"));
+            && (end == input.length() || !letters.matcher(Character.toString(input.charAt(end))).matches()
+            && (start == 0 || !Character.toString(input.charAt(start - 1)).equals(":"))
+            && !Character.toString(input.charAt(end)).equals(":"));
     }
 
     /**
@@ -132,8 +136,8 @@ public class TextManipulationService {
         List<Emoji> selectedEmojis = Emoji.loadFromKeyword(keyword, emojis);
 
         List<DiscordEmoji> discordEmojis = emojis.stream().filter(e -> e instanceof DiscordEmoji)
-                .map(e -> (DiscordEmoji) e)
-                .collect(Collectors.toList());
+            .map(e -> (DiscordEmoji) e)
+            .collect(Collectors.toList());
         List<DiscordEmoji> selectedDiscordEmojis = DiscordEmoji.getForKeyword(keyword, discordEmojis);
 
         for (DiscordEmoji selectedDiscordEmoji : selectedDiscordEmojis) {
@@ -151,22 +155,23 @@ public class TextManipulationService {
 
     private String filterOutput(String input) {
         //replace all b or B with B emoji
-        input = replaceB(input);
+        if (replaceB) input = replaceB(input);
 
         //replace all spaces with emojis
-        StringList strings = StringListImpl.charsToList(input);
-        List<Emoji> randomEmojis = emojis.stream().filter(Emoji::isRandom).collect(Collectors.toList());
+        if (randEmojis) {
+            StringList strings = StringListImpl.charsToList(input);
+            List<Emoji> randomEmojis = emojis.stream().filter(Emoji::isRandom).collect(Collectors.toList());
 
-        if (!randomEmojis.isEmpty()) {
-            List<Integer> spacePositions = findOccurrences(input, " ");
-            for (int pos : spacePositions) {
-                int rand = ThreadLocalRandom.current().nextInt(0, randomEmojis.size());
-                String emojiSpace = String.format(" %s ", randomEmojis.get(rand).getEmojiValue());
-                strings.set(pos, emojiSpace);
+            if (!randomEmojis.isEmpty()) {
+                List<Integer> spacePositions = findOccurrences(input, " ");
+                for (int pos : spacePositions) {
+                    int rand = ThreadLocalRandom.current().nextInt(0, randomEmojis.size());
+                    String emojiSpace = String.format(" %s ", randomEmojis.get(rand).getEmojiValue());
+                    strings.set(pos, emojiSpace);
+                }
             }
+            input = strings.toString();
         }
-
-        input = strings.toString();
 
         return input;
     }
@@ -212,7 +217,7 @@ public class TextManipulationService {
         Character[] chars = word.chars().mapToObj(c -> (char) c).toArray(Character[]::new);
         //check that the word is not surrounded by ':' in which case it's most likely a discord emoji
         return Arrays.stream(chars).allMatch(Character::isLetter)
-                && !(prevWord.equals(":") && nextWord.equals(":"));
+            && !(prevWord.equals(":") && nextWord.equals(":"));
     }
 
 }

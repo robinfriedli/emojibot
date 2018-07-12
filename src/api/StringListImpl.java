@@ -148,6 +148,19 @@ public class StringListImpl implements StringList {
         values.set(index, value);
     }
 
+    @Override
+    public StringList filterWords() {
+        StringList stringList = create();
+        for (String value : values) {
+            Character[] chars = value.chars().mapToObj(c -> (char) c).toArray(Character[]::new);
+            if (Arrays.stream(chars).allMatch(Character::isLetter)) {
+                stringList.add(value);
+            }
+        }
+
+        return stringList;
+    }
+
     public static StringList create(String string, String regex) {
         String[] stringList = string.split(regex);
         return create(stringList);

@@ -1,13 +1,12 @@
 package util;
 
+import java.util.List;
+import java.util.Scanner;
+
 import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
 import core.EmojiLoadingService;
-import core.TextManipulationService;
-
-import java.util.List;
-import java.util.Scanner;
 
 public class Launcher {
 
@@ -72,40 +71,17 @@ public class Launcher {
     }
 
     private static void transformText() {
-        boolean randomFormat;
-
-        System.out.println("Apply random formatting bold / italic (y/n)");
+        System.out.println("Enter text to transform. Put text in quotation marks if you want to add arguments '-arg1 -arg2 \"text\"'");
         Scanner sc = new Scanner(System.in);
-        String argument = sc.nextLine();
-
-        switch (argument) {
-            case "y":
-                randomFormat = true;
-                break;
-
-            case "n":
-                randomFormat = false;
-                break;
-
-            default:
-                throw new IllegalArgumentException("Invalid argument");
-        }
-
-        System.out.println("Enter text to transform:");
-        Scanner inputSc = new Scanner(System.in);
-        String input = inputSc.nextLine();
-
-        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-        TextManipulationService service = new TextManipulationService(randomFormat, emojiLoadingService.loadEmojis(), null);
-        System.out.println(service.getOutput(input));
+        commandHandler.transformText(sc.nextLine(), null);
 
         showMenu();
     }
 
     private static void addEmojis() {
         System.out.println("Type '\"emoji1, emoji2\" (optional: \"true, false\")' to add emojis.\n" +
-                "Or type '\"emoji1, emoji2\" (optional: \"true, false\") \"keyword1, keyword2\" \"true false\"' to add emojis with keywords " +
-                "or adjust replace value of existing keyword");
+            "Or type '\"emoji1, emoji2\" (optional: \"true, false\") \"keyword1, keyword2\" \"true false\"' to add emojis with keywords " +
+            "or adjust replace value of existing keyword");
         System.out.print(System.lineSeparator());
 
         Scanner sc = new Scanner(System.in);
@@ -119,7 +95,7 @@ public class Launcher {
 
     private static void removeEmojis() {
         System.out.println("Type '\"emoji1, emoji2\"' to remove emojis " +
-                "or '\"emoji1, emoji2\" \"keyword1, keyword2\"' to remove keywords from specified emojis");
+            "or '\"emoji1, emoji2\" \"keyword1, keyword2\"' to remove keywords from specified emojis");
         System.out.print(System.lineSeparator());
 
         Scanner sc = new Scanner(System.in);
@@ -155,7 +131,7 @@ public class Launcher {
         if (!discordEmojis.isEmpty()) builder.append("Emojis from guilds:").append(System.lineSeparator());
         for (DiscordEmoji discordEmoji : discordEmojis) {
             builder.append(discordEmoji.getName()).append("\t").append(discordEmoji.getGuildName())
-                    .append("\trandom: ").append(discordEmoji.isRandom());
+                .append("\trandom: ").append(discordEmoji.isRandom());
 
             List<Keyword> keywords = discordEmoji.getKeywords();
             for (int i = 0; i < keywords.size(); i++) {
@@ -185,12 +161,12 @@ public class Launcher {
 
     private static String buildMenu() {
         return "1 - Launch Discord Bot" + System.lineSeparator() +
-                "2 - Transform text to emojitext" + System.lineSeparator() +
-                "3 - Add Emojis and Keywords or adjust replace value of existing Keyword" + System.lineSeparator() +
-                "4 - Remove Emojis or Keywords" + System.lineSeparator() +
-                "5 - List all Emojis and Keywords" + System.lineSeparator() +
-                "6 - Search for Emojis and Keywords" + System.lineSeparator() +
-                "7 - Clean up errors in XML configuration" + System.lineSeparator() +
-                "8 - Exit";
+            "2 - Transform text to emojitext" + System.lineSeparator() +
+            "3 - Add Emojis and Keywords or adjust replace value of existing Keyword" + System.lineSeparator() +
+            "4 - Remove Emojis or Keywords" + System.lineSeparator() +
+            "5 - List all Emojis and Keywords" + System.lineSeparator() +
+            "6 - Search for Emojis and Keywords" + System.lineSeparator() +
+            "7 - Clean up errors in XML configuration" + System.lineSeparator() +
+            "8 - Exit";
     }
 }

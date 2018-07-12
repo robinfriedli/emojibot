@@ -16,7 +16,11 @@ ________________________________________________________________________________
 ### Transform text into emojitext:
 
     Syntax:
-    `e!e text` or `e!e -r text` to enable random markdown formatting
+    `e!e text` or `e!e -arg1 -arg2 "text"`
+
+    Notice:
+    arguments set property to the opposite of what's in the settings
+    args: -rf (random formatting), -re (random emojis), -rb (replace b with 🅱️)
 
 ### List all saved emojis:
 
@@ -76,6 +80,13 @@ ________________________________________________________________________________
     Notice: emojis and keywords can only duplicate if manually meddling with the xml file,
     the bot does not duplicate anything
     when merging keywords the replace flag is set to true if all keywords are true
+
+### Settings:
+
+    Syntax:
+    `e!settings`: show all settings
+    `e!settings "REPLACE_B"`: show value of property
+    `e!settings "REPLACE_B" "true"`: adjust value of property
 
 ____________________________________________________________________________________________________________________
 
