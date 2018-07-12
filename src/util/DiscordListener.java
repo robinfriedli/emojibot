@@ -56,7 +56,7 @@ public class DiscordListener extends ListenerAdapter {
 
             try {
                 if (msg.startsWith(COMMAND_TRANSFORM)) {
-                    transformText(msg, event);
+                    transformText(msg, message, event);
                 }
 
                 if (msg.startsWith(COMMAND_ADD)) {
@@ -102,8 +102,12 @@ public class DiscordListener extends ListenerAdapter {
      * @param msg whole input string
      * @param event
      */
-    private void transformText(String msg, MessageReceivedEvent event) {
-        commandHandler.transformText(msg.substring(COMMAND_TRANSFORM.length() + 1, msg.length()), event);
+    private void transformText(String msg, Message message, MessageReceivedEvent event) {
+        try {
+            message.delete().queue();
+        } finally {
+            commandHandler.transformText(msg.substring(COMMAND_TRANSFORM.length() + 1, msg.length()), event);
+        }
     }
 
     /**
