@@ -46,7 +46,8 @@ public class EmojiAddingService {
             if (!emojiExists(doc, emoji)) {
                 Element emojiElem = doc.createElement("emoji");
                 emojiElem.setAttribute("value", emoji);
-                if (randomTags.tryGet(i) != null) emojiElem.setAttribute("random", randomTags.tryGet(i));
+                if (randomTags.size() == 1) emojiElem.setAttribute("random", randomTags.get(0));
+                if (randomTags.size() > 1) emojiElem.setAttribute("random", randomTags.tryGet(i));
                 rootElem.appendChild(emojiElem);
 
                 addedEmojis.add(emoji);
@@ -55,11 +56,12 @@ public class EmojiAddingService {
                 String randomTag = emojiElem.getAttribute("random");
                 if (!randomTags.isEmpty()) {
                     boolean random = randomTag.equals("") || Boolean.parseBoolean(randomTag);
-                    boolean newRandom = Boolean.parseBoolean(randomTags.tryGet(i));
+                    boolean newRandom = randomTags.size() == 1 ? Boolean.parseBoolean(randomTags.get(0))
+                        : Boolean.parseBoolean(randomTags.tryGet(i));
                     if (random == newRandom) {
                         existingEmojis.add(emoji);
                     } else {
-                        emojiElem.setAttribute("random", randomTags.tryGet(i));
+                        emojiElem.setAttribute("random", Boolean.toString(newRandom));
                         adjustedEmojis.add(emoji);
                     }
                 }
@@ -75,6 +77,8 @@ public class EmojiAddingService {
                     if (!discordEmojiExists(doc, emojiValue)) {
                         Element emojiElem = doc.createElement("discord-emoji");
                         emojiElem.setAttribute("value", emojiValue);
+                        if (randomTags.size() == 1) emojiElem.setAttribute("random", randomTags.get(0));
+                        if (randomTags.size() > 1) emojiElem.setAttribute("random", randomTags.tryGet(i));
                         emojiElem.setAttribute("name", emojiName);
                         emojiElem.setAttribute("guildId", guild.getId());
                         emojiElem.setAttribute("guildName", guild.getName());
@@ -86,11 +90,12 @@ public class EmojiAddingService {
                         String randomTag = emojiElem.getAttribute("random");
                         if (!randomTags.isEmpty()) {
                             boolean random = randomTag.equals("") || Boolean.parseBoolean(randomTag);
-                            boolean newRandom = Boolean.parseBoolean(randomTags.tryGet(i));
+                            boolean newRandom = randomTags.size() == 1 ? Boolean.parseBoolean(randomTags.tryGet(0))
+                                : Boolean.parseBoolean(randomTags.tryGet(i));
                             if (random == newRandom) {
                                 existingEmojis.add(emojiValue);
                             } else {
-                                emojiElem.setAttribute("random", randomTags.tryGet(i));
+                                emojiElem.setAttribute("random", Boolean.toString(newRandom));
                                 adjustedEmojis.add(emojiValue);
                             }
                         }
@@ -129,7 +134,8 @@ public class EmojiAddingService {
             if (!emojiExists(doc, emoji)) {
                 emojiElem = doc.createElement("emoji");
                 emojiElem.setAttribute("value", emoji);
-                if (!randomTags.isEmpty()) emojiElem.setAttribute("random", randomTags.tryGet(i));
+                if (randomTags.size() == 1) emojiElem.setAttribute("random", randomTags.get(0));
+                if (randomTags.size() > 1) emojiElem.setAttribute("random", randomTags.tryGet(i));
 
                 addedEmojis.add(emoji);
             } else {
@@ -137,11 +143,12 @@ public class EmojiAddingService {
                 String randomTag = emojiElem.getAttribute("random");
                 if (!randomTags.isEmpty()) {
                     boolean random = randomTag.equals("") || Boolean.parseBoolean(randomTag);
-                    boolean newRandom = Boolean.parseBoolean(randomTags.tryGet(i));
+                    boolean newRandom = randomTags.size() == 1 ? Boolean.parseBoolean(randomTags.get(0))
+                        : Boolean.parseBoolean(randomTags.tryGet(i));
                     if (random == newRandom) {
                         existingEmojis.add(emoji);
                     } else {
-                        emojiElem.setAttribute("random", randomTags.tryGet(i));
+                        emojiElem.setAttribute("random", Boolean.toString(newRandom));
                         adjustedEmojis.add(emoji);
                     }
                 }
@@ -187,6 +194,8 @@ public class EmojiAddingService {
                     if (!discordEmojiExists(doc, emojiValue)) {
                         emojiElem = doc.createElement("discord-emoji");
                         emojiElem.setAttribute("value", emojiValue);
+                        if (randomTags.size() == 1) emojiElem.setAttribute("random", randomTags.get(0));
+                        if (randomTags.size() > 1) emojiElem.setAttribute("random", randomTags.tryGet(i));
                         emojiElem.setAttribute("name", emojiName);
                         emojiElem.setAttribute("guildId", guild.getId());
                         emojiElem.setAttribute("guildName", guild.getName());
@@ -197,11 +206,12 @@ public class EmojiAddingService {
                         String randomTag = emojiElem.getAttribute("random");
                         if (!randomTags.isEmpty()) {
                             boolean random = randomTag.equals("") || Boolean.parseBoolean(randomTag);
-                            boolean newRandom = Boolean.parseBoolean(randomTags.tryGet(i));
+                            boolean newRandom = randomTags.size() == 1 ? Boolean.parseBoolean(randomTags.get(0))
+                                : Boolean.parseBoolean(randomTags.tryGet(i));
                             if (random == newRandom) {
                                 existingEmojis.add(emojiValue);
                             } else {
-                                emojiElem.setAttribute("random", randomTags.tryGet(i));
+                                emojiElem.setAttribute("random", Boolean.toString(newRandom));
                                 adjustedEmojis.add(emojiValue);
                             }
                         }
