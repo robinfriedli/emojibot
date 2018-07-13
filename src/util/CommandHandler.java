@@ -113,20 +113,17 @@ public class CommandHandler {
                 randomTags.addAll(randomArgs);
             }
 
-            if (randomTags.isEmpty()
-                || (randomTags.size() == emojiList.size()
-                && randomTags.stream().allMatch(t -> t.equals("false") || t.equals("true")))) {
-
+            if (randomTagsValid(randomTags, emojiList)) {
                 if (guild != null) {
                     discordEmojis = filterDiscordEmojis(emojiList, guild);
                     if (!discordEmojis.isEmpty()) {
                         emojiList.removeAll(discordEmojis);
                     }
                 }
-
                 emojiAddingService.addEmojis(emojiList, discordEmojis, randomTags, channel, guild);
             } else {
-                alertService.send("Random tags must be either 'true' or 'false'", channel);
+                alertService.send("Random tags must be either 'true' or 'false'" + System.lineSeparator()
+                    + "There has the be one random tag for each emoji, exactly one for all or none at all", channel);
             }
         }
 
@@ -151,28 +148,21 @@ public class CommandHandler {
                 randomTags.addAll(randomArgs);
             }
 
-            if (Arrays.stream(replaceTagList).allMatch(s -> s.equals("true") || s.equals("false"))
-                && keywordList.length == replaceTagList.length
-                && Arrays.stream(keywordList).allMatch(k -> k.equals(k.toLowerCase()))
-                && (randomTags.isEmpty()
-                || (randomTags.size() == emojiList.size()
-                && randomTags.stream().allMatch(t -> t.equals("false") || t.equals("true"))))) {
-
+            if (keywordsValid(replaceTagList, keywordList) && randomTagsValid(randomTags, emojiList)) {
                 if (guild != null) {
                     discordEmojis = filterDiscordEmojis(emojiList, guild);
                     if (!discordEmojis.isEmpty()) {
                         emojiList.removeAll(discordEmojis);
                     }
                 }
-
                 emojiAddingService.addEmojis(emojiList, discordEmojis, randomTags, keywordList, replaceTagList, channel, guild);
             } else {
                 StringBuilder builder = new StringBuilder();
 
                 builder.append("There has to be one replace flag for each keyword").append(System.lineSeparator())
-                    .append("Replace tag has to be either 'true' or 'false'").append(System.lineSeparator())
+                    .append("Replace and random tags has to be either 'true' or 'false'").append(System.lineSeparator())
                     .append("Keywords have to be lower case").append(System.lineSeparator())
-                    .append("There has to be one random flag for each emoji or no random flag at all");
+                    .append("There has to be one random flag for each emoji, exactly one for all or no random flag at all");
 
                 if (channel != null) builder.append(System.lineSeparator()).append("See " + DiscordListener.COMMAND_HELP);
 
@@ -184,6 +174,18 @@ public class CommandHandler {
             if (channel != null) builder.append(" See " + DiscordListener.COMMAND_HELP);
             alertService.send(builder.toString(), channel);
         }
+    }
+
+    private boolean keywordsValid(String[] replaceTags, String[] keywords) {
+        return Arrays.stream(replaceTags).allMatch(s -> s.equals("true") || s.equals("false"))
+            && keywords.length == replaceTags.length
+            && Arrays.stream(keywords).allMatch(k -> k.equals(k.toLowerCase()));
+    }
+
+    private boolean randomTagsValid(StringList randomTags, List<String> emojis) {
+        return randomTags.isEmpty()
+            || ((randomTags.size() == 1 || randomTags.size() == emojis.size())
+            && randomTags.stream().allMatch(t -> t.equals("false") || t.equals("true")));
     }
 
     /**
