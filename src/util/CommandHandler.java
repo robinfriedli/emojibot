@@ -77,8 +77,10 @@ public class CommandHandler {
         if (event != null) {
             guild = event.getGuild();
             message = event.getMessage();
-            List<DiscordEmoji> discordEmojisForGuild = DiscordEmoji.getForGuild(emojiLoadingService.loadDiscordEmojis(), guild.getId());
-            emojis.addAll(discordEmojisForGuild);
+            if (guild != null) {
+                List<DiscordEmoji> discordEmojisForGuild = DiscordEmoji.getForGuild(emojiLoadingService.loadDiscordEmojis(), guild.getId());
+                emojis.addAll(discordEmojisForGuild);
+            }
             responseBuilder.append("**").append(message.getAuthor().getName()).append("**").append(System.lineSeparator());
         }
 
