@@ -15,6 +15,7 @@ public class AlertService {
 
     private static final int MESSAGE_LENGTH_LIMIT = 1000;
 
+    @Deprecated
     public void alertRemovedEmojis(List<String> removedEmojis, List<String> missingEmojis, @Nullable MessageChannel channel) {
         StringBuilder builder = new StringBuilder();
 
@@ -31,6 +32,7 @@ public class AlertService {
         send(builder.toString(), channel);
     }
 
+    @Deprecated
     public void alertRemovedKeywords(List<String> missingEmojis,
                                      Multimap<String, String> removedKeywords,
                                      Multimap<String, String> missingKeywords,
@@ -61,6 +63,7 @@ public class AlertService {
         send(builder.toString(), channel);
     }
 
+    @Deprecated
     public void alertAddedEmojis(List<String> addedEmojis,
                                  List<String> existingEmojis,
                                  List<String> adjustedEmojis,
@@ -68,6 +71,7 @@ public class AlertService {
         send(buildAddedEmojisAlertMessage(addedEmojis, existingEmojis, adjustedEmojis), channel);
     }
 
+    @Deprecated
     public void alertAddedEmojis(List<String> addedEmojis,
                                  List<String> existingEmojis,
                                  List<String> adjustedEmojis,
