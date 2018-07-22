@@ -107,7 +107,7 @@ public class TextManipulationService {
     }
 
     private boolean isFullWord(String input, int start, int end) {
-        Pattern letters = Pattern.compile("[A-Za-zÀ-ÿ]");
+        Pattern letters = Pattern.compile("[A-Za-zÀ-ÿ0-9]");
         return (start == 0 || !letters.matcher(Character.toString(input.charAt(start - 1))).matches())
             && (end == input.length() || !letters.matcher(Character.toString(input.charAt(end))).matches()
             && (start == 0 || !Character.toString(input.charAt(start - 1)).equals(":"))
