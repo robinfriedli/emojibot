@@ -30,6 +30,13 @@ public class Keyword {
         this.replace = replace;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Keyword)) return false;
+        if (keywordValue.equals(((Keyword) o).getKeywordValue())) return true;
+        return false;
+    }
+
     public static List<String> getAllKeywordValues(List<Keyword> keywords) {
         List<String> keywordValues = Lists.newArrayList();
         for (Keyword keyword : keywords) {

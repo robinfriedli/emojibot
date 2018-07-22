@@ -6,15 +6,17 @@ import java.util.Scanner;
 import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
-import core.EmojiLoadingService;
+import core.Context;
+import core.XmlManager;
 
 public class Launcher {
 
-    private static CommandHandler commandHandler = new CommandHandler();
+    private static Context context = new Context();
+    private static CommandHandler commandHandler = new CommandHandler(context);
 
     public static void main(String[] args) {
-        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-        if (emojiLoadingService.getDocument() != null) {
+        XmlManager xmlManager = new XmlManager();
+        if (xmlManager.getDocument() != null) {
             showMenu();
         } else {
             throw new IllegalStateException("Emoji loading failed");
@@ -66,7 +68,7 @@ public class Launcher {
 
     private static void launchDiscordBot() {
         commandHandler.cleanXml(null);
-        DiscordListener discordListener = new DiscordListener(commandHandler);
+        DiscordListener discordListener = new DiscordListener(context, commandHandler);
         discordListener.launch();
     }
 
@@ -108,9 +110,8 @@ public class Launcher {
     }
 
     private static void listEmojis() {
-        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-        List<Emoji> emojis = emojiLoadingService.loadEmojis();
-        List<DiscordEmoji> discordEmojis = emojiLoadingService.loadDiscordEmojis();
+        List<Emoji> emojis = context.getUnicodeEmojis();
+        List<DiscordEmoji> discordEmojis = context.getDiscordEmojis();
         StringBuilder builder = new StringBuilder();
 
         for (Emoji emoji : emojis) {

@@ -16,6 +16,13 @@ public class DiscordEmoji extends Emoji {
         this.guildName = guildName;
     }
 
+    public DiscordEmoji(List<Keyword> keywords, String value, boolean random, State state, String name, String guildId, String guildName) {
+        super(keywords, value, random, state);
+        this.name = name;
+        this.guildId = guildId;
+        this.guildName = guildName;
+    }
+
     public void setName(String name) {
         this.name = name;
     }

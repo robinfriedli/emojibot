@@ -14,6 +14,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.util.List;
 
+@Deprecated // deprecated as of v2.3, use PersistenceManager instead
 public class EmojiLoadingService {
 
     /**
@@ -23,6 +24,7 @@ public class EmojiLoadingService {
      *
      * @return Multimap
      */
+    @Deprecated
     public List<Emoji> loadEmojis() {
         Document doc = getDocument();
         NodeList emojiList = doc.getElementsByTagName("emoji");
@@ -43,6 +45,7 @@ public class EmojiLoadingService {
         return emojis;
     }
 
+    @Deprecated
     public List<DiscordEmoji> loadDiscordEmojis() {
         Document doc = getDocument();
         NodeList emojiList = doc.getElementsByTagName("discord-emoji");
@@ -80,6 +83,7 @@ public class EmojiLoadingService {
         return keywordList;
     }
 
+    @Deprecated
     public Document getDocument() {
         try {
             File xml = new File("./resources/emojis.xml");

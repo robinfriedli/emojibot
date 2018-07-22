@@ -8,7 +8,7 @@ import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
 import com.google.common.collect.Lists;
-import core.EmojiLoadingService;
+import core.Context;
 import core.TextLoadingService;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
@@ -30,9 +30,11 @@ public class DiscordListener extends ListenerAdapter {
     public static final String COMMAND_CLEAN = "e!clean";
     public static final String COMMAND_SETTINGS = "e!settings";
 
+    private final Context context;
     private final CommandHandler commandHandler;
 
-    public DiscordListener(CommandHandler commandHandler) {
+    public DiscordListener(Context context, CommandHandler commandHandler) {
+        this.context = context;
         this.commandHandler = commandHandler;
     }
 
@@ -88,7 +90,8 @@ public class DiscordListener extends ListenerAdapter {
                 if (msg.startsWith(COMMAND_SETTINGS)) {
                     commandHandler.handleSettings(msg, message.getChannel());
                 }
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException | IllegalStateException | UnsupportedOperationException e) {
+                e.printStackTrace();
                 message.getChannel().sendMessage(e.getMessage()).queue();
             }
 
@@ -116,9 +119,8 @@ public class DiscordListener extends ListenerAdapter {
      * @param channel
      */
     private void listEmojis(MessageChannel channel) {
-        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-        List<Emoji> emojis = emojiLoadingService.loadEmojis();
-        List<DiscordEmoji> discordEmojis = emojiLoadingService.loadDiscordEmojis();
+        List<Emoji> emojis = context.getUnicodeEmojis();
+        List<DiscordEmoji> discordEmojis = context.getDiscordEmojis();
         //if the output exceeds 2000 characters separate into several messages
         List<String> outputParts = Lists.newArrayList();
         outputParts.add("");

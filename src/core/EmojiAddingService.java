@@ -24,11 +24,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Deprecated // deprecated as of v2.3, use PersistenceManager instead
 public class EmojiAddingService {
 
     private EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
     private AlertService alertService = new AlertService();
 
+    @Deprecated
     public void addEmojis(List<String> emojis,
                           List<String> discordEmojis,
                           StringList randomTags,
@@ -109,6 +111,7 @@ public class EmojiAddingService {
         alertService.alertAddedEmojis(addedEmojis, existingEmojis, adjustedEmojis, channel);
     }
 
+    @Deprecated
     public void addEmojis(List<String> emojis,
                           List<String> discordEmojis,
                           StringList randomTags,
@@ -251,6 +254,7 @@ public class EmojiAddingService {
         alertService.alertAddedEmojis(addedEmojis, existingEmojis, adjustedEmojis, addedKeywords, adjustedKeywords, existingKeywords, channel);
     }
 
+    @Deprecated
     public void removeEmojis(List<String> emojisToRemove,
                              List<String> discordEmojisToRemove,
                              @Nullable MessageChannel channel,
@@ -286,6 +290,7 @@ public class EmojiAddingService {
         alertService.alertRemovedEmojis(removedEmojis, StringListImpl.join(emojisToRemove, emojistToRemoveValues).getValues(), channel);
     }
 
+    @Deprecated
     public void removeKeywords(List<String> emojis,
                                List<String> discordEmojis,
                                List<String> keywordsToRemove,
