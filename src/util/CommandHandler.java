@@ -128,7 +128,8 @@ public class CommandHandler {
             if (randomTagsValid(randomTags, emojiValues)) {
                 for (int i = 0; i < emojiValues.size(); i++) {
                     String emoji = emojiValues.get(i);
-                    boolean random = randomTags.isEmpty() || Boolean.parseBoolean(randomTags.get(i));
+                    boolean random = randomTags.isEmpty()
+                        || randomTags.size() == 1 ? Boolean.parseBoolean(randomTags.get(0)) : Boolean.parseBoolean(randomTags.get(i));
                     if (isDiscordEmoji(emoji, guild)) {
                         createdEmojis[i] = new DiscordEmoji(
                             Lists.newArrayList(),
@@ -183,7 +184,8 @@ public class CommandHandler {
             if (keywordsValid(replaceTagList, keywordList) && randomTagsValid(randomTags, emojiList)) {
                 for (int i = 0; i < emojiList.size(); i++) {
                     String emoji = emojiList.get(i);
-                    boolean random = randomTags.isEmpty() || Boolean.parseBoolean(randomTags.get(i));
+                    boolean random = randomTags.isEmpty()
+                        || randomTags.size() == 1 ? Boolean.parseBoolean(randomTags.get(0)) : Boolean.parseBoolean(randomTags.get(i));
                     if (isDiscordEmoji(emoji, guild)) {
                         emojis[i] = new DiscordEmoji(
                             Lists.newArrayList(keywords),
