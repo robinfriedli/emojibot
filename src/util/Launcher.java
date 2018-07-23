@@ -154,7 +154,7 @@ public class Launcher {
         System.out.println("Enter search term:");
         Scanner sc = new Scanner(System.in);
         String input = sc.nextLine();
-        commandHandler.searchQuery(input, null, null);
+        commandHandler.searchQuery(input, null);
 
         System.out.print(System.lineSeparator());
         showMenu();

@@ -80,7 +80,7 @@ public class DiscordListener extends ListenerAdapter {
                 }
 
                 if (msg.startsWith(COMMAND_SEARCH)) {
-                    searchQuery(message, msg, event.getGuild());
+                    searchQuery(message, msg);
                 }
 
                 if (msg.equals(COMMAND_CLEAN)) {
@@ -170,10 +170,10 @@ public class DiscordListener extends ListenerAdapter {
         return outputParts;
     }
 
-    private void searchQuery(Message message, String msg, Guild guild) {
+    private void searchQuery(Message message, String msg) {
         String query = msg.substring(msg.indexOf("\"") + 1, msg.lastIndexOf("\""));
 
-        commandHandler.searchQuery(query, message.getChannel(), guild);
+        commandHandler.searchQuery(query, message.getChannel());
     }
 
 }
