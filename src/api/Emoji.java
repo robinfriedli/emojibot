@@ -2,6 +2,7 @@ package api;
 
 import com.google.common.collect.Lists;
 import core.Context;
+import core.DuplicateKeywordEvent;
 import core.EmojiChangingEvent;
 import util.DiscordListener;
 
@@ -46,9 +47,16 @@ public class Emoji {
 
     @Nullable
     public Keyword getKeyword(String value) {
+        return getKeyword(value, false);
+    }
+
+    public Keyword getKeyword(String value, boolean ignoreCase) {
         if (hasKeywordValue(value)) {
             List<Keyword> foundKeywords = keywords.stream()
-                .filter(k -> k.getKeywordValue().equals(value)).collect(Collectors.toList());
+                .filter(k -> ignoreCase
+                    ? k.getKeywordValue().equalsIgnoreCase(value)
+                    : k.getKeywordValue().equals(value))
+                .collect(Collectors.toList());
 
             if (foundKeywords.size() == 1) {
                 return foundKeywords.get(0);
@@ -61,18 +69,27 @@ public class Emoji {
     }
 
     public Keyword requireKeyword(String value) {
-        List<Keyword> matchedKeywords = keywords.stream()
-            .filter(k -> k.getKeywordValue().equals(value))
-            .collect(Collectors.toList());
+        Keyword keyword = getKeyword(value);
 
-        if (matchedKeywords.size() == 1) {
-            return matchedKeywords.get(0);
-        } else if (matchedKeywords.size() > 1) {
-            throw new IllegalStateException("Keyword value " + value + " not unique on emoji " + emojiValue
-                + "Execute clean command or fix XML manually");
-        } else {
+        if (keyword == null) {
             throw new IllegalStateException("Keyword value " + value + " not found on emoji " + emojiValue);
         }
+
+        return keyword;
+    }
+
+    public Keyword requireKeywordIgnoreCase(String value) {
+        Keyword keyword = getKeyword(value, true);
+
+        if (keyword == null) {
+            throw new IllegalStateException("Keyword value " + value + " not found on emoji " + emojiValue);
+        }
+
+        return keyword;
+    }
+
+    public List<Keyword> getDuplicatesOf(Keyword keyword) {
+        return this.keywords.stream().filter(k -> k.getKeywordValue().equals(keyword.getKeywordValue())).collect(Collectors.toList());
     }
 
     public void setKeywords(List<Keyword> keywords) {
@@ -97,6 +114,14 @@ public class Emoji {
             throw new IllegalStateException("Duplicate keyword " + keyword.getKeywordValue() + " on Emoji " + this.getEmojiValue()
                 + ". Try " + DiscordListener.COMMAND_CLEAN);
         }
+    }
+
+    public boolean removeAll(Keyword keyword) {
+        boolean performed = false;
+        while (hasKeyword(keyword)) {
+            performed = keywords.remove(keyword);
+        }
+        return performed;
     }
 
     public String getEmojiValue() {
@@ -175,12 +200,12 @@ public class Emoji {
             }
 
             @Override
-            public List<EmojiChangingEvent> getChanges() {
+            public List<EmojiChangingEvent> getChanges(Emoji source) {
                 throw new UnsupportedOperationException("Trying to call getChanges() on an Emoji that is not in state TOUCHED but " + this.toString());
             }
 
             @Override
-            public void clearChanges() {
+            public void clearChanges(Emoji source) {
                 throw new UnsupportedOperationException("Trying to call clearChanges() on an Emoji that is not in state TOUCHED but " + this.toString());
             }
         },
@@ -195,12 +220,12 @@ public class Emoji {
             }
 
             @Override
-            public List<EmojiChangingEvent> getChanges() {
+            public List<EmojiChangingEvent> getChanges(Emoji source) {
                 throw new UnsupportedOperationException("Trying to call getChanges() on an Emoji that is not in state TOUCHED but " + this.toString());
             }
 
             @Override
-            public void clearChanges() {
+            public void clearChanges(Emoji source) {
                 throw new UnsupportedOperationException("Trying to call clearChanges() on an Emoji that is not in state TOUCHED but " + this.toString());
             }
         },
@@ -223,13 +248,21 @@ public class Emoji {
             }
 
             @Override
-            public List<EmojiChangingEvent> getChanges() {
-                return this.changes;
+            public List<EmojiChangingEvent> getChanges(Emoji source) {
+                return this.changes.stream().filter(c -> c.getSource().equals(source)).collect(Collectors.toList());
             }
 
             @Override
-            public void clearChanges() {
-                this.changes.clear();
+            public void clearChanges(Emoji source) {
+                List<EmojiChangingEvent> changesToRemove = Lists.newArrayList();
+                if (!changes.isEmpty()) {
+                    for (EmojiChangingEvent event : changes) {
+                        if (event.getSource().equals(source)) {
+                            changesToRemove.add(event);
+                        }
+                    }
+                }
+                changes.removeAll(changesToRemove);
             }
         },
 
@@ -243,21 +276,21 @@ public class Emoji {
             }
 
             @Override
-            public List<EmojiChangingEvent> getChanges() {
+            public List<EmojiChangingEvent> getChanges(Emoji source) {
                 throw new UnsupportedOperationException("Trying to call getChanges() on an Emoji that is not in state TOUCHED but " + this.toString());
             }
 
             @Override
-            public void clearChanges() {
+            public void clearChanges(Emoji source) {
                 throw new UnsupportedOperationException("Trying to call clearChanges() on an Emoji that is not in state TOUCHED but " + this.toString());
             }
         };
 
         public abstract void addChanges(EmojiChangingEvent emojiChangingEvent, Context context);
 
-        public abstract List<EmojiChangingEvent> getChanges();
+        public abstract List<EmojiChangingEvent> getChanges(Emoji source);
 
-        public abstract void clearChanges();
+        public abstract void clearChanges(Emoji source);
 
     }
 

@@ -44,7 +44,7 @@ public class PersistenceManager {
                     break;
                 case TOUCHED:
                     commitEmojiChanges(emoji);
-                    emoji.getState().clearChanges();
+                    emoji.getState().clearChanges(emoji);
             }
         }
         xmlManager.writeToFile();
@@ -225,7 +225,7 @@ public class PersistenceManager {
     }
 
     private <E extends Emoji> void commitEmojiChanges(E emoji) {
-        for (EmojiChangingEvent change : emoji.getState().getChanges()) {
+        for (EmojiChangingEvent change : emoji.getState().getChanges(emoji)) {
             applyEmojiChanges(emoji, change, true);
         }
     }
