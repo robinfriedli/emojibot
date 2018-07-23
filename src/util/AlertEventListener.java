@@ -1,7 +1,7 @@
 package util;
 
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 import api.Keyword;
 import api.StringList;
@@ -9,6 +9,8 @@ import api.StringListImpl;
 import core.Context;
 import core.EmojiChangingEvent;
 import core.Event;
+import core.KeywordChangingEvent;
+import core.UpperCaseKeywordEvent;
 import net.dv8tion.jda.core.entities.MessageChannel;
 
 public class AlertEventListener extends EventListener {
@@ -41,7 +43,7 @@ public class AlertEventListener extends EventListener {
         Boolean randomTag = event.getRandomTag();
         List<Keyword> addedKeywords = event.getAddedKeywords();
         List<Keyword> removedKeywords = event.getRemovedKeywords();
-        Map<String, Boolean> changedKeywords = event.getChangedKeywords();
+        List<KeywordChangingEvent> changedKeywords = event.getChangedKeywords();
 
         if (randomTag != null
             || (addedKeywords != null && !addedKeywords.isEmpty())
@@ -71,10 +73,16 @@ public class AlertEventListener extends EventListener {
             }
 
             if (changedKeywords != null && !changedKeywords.isEmpty()) {
-                StringList keywordValues = StringListImpl.create(changedKeywords.keySet());
+                List<Keyword> existingKeywords = changedKeywords.stream().map(KeywordChangingEvent::getExistingKeyword).collect(Collectors.toList());
+                StringList keywordValues = StringListImpl.create(Keyword.getAllKeywordValues(existingKeywords));
 
-                responseBuilder.append("\tReplace flag adjusted on keywords: ").append(keywordValues.toSeparatedString(", ")).
-                    append(System.lineSeparator());
+                if (event instanceof UpperCaseKeywordEvent) {
+                    responseBuilder.append("\tKeywords set to lower case: ").append(keywordValues.toSeparatedString(", "))
+                        .append(System.lineSeparator());
+                } else {
+                    responseBuilder.append("\tReplace flag adjusted on keywords: ").append(keywordValues.toSeparatedString(", ")).
+                        append(System.lineSeparator());
+                }
             }
         } else {
             responseBuilder.append("Emoji ").append(event.getSource().getEmojiValue())

@@ -33,8 +33,8 @@ public class Keyword {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Keyword)) return false;
-        if (keywordValue.equals(((Keyword) o).getKeywordValue())) return true;
-        return false;
+        return keywordValue.equals(((Keyword) o).getKeywordValue())
+            && isReplace() == ((Keyword) o).isReplace();
     }
 
     public static List<String> getAllKeywordValues(List<Keyword> keywords) {

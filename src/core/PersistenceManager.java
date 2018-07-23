@@ -1,8 +1,8 @@
 package core;
 
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -12,6 +12,7 @@ import api.Emoji;
 import api.Keyword;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import org.w3c.dom.Element;
 import util.AlertService;
 import util.DiscordListener;
@@ -68,7 +69,7 @@ public class PersistenceManager {
                 Boolean random = emoji.isRandom() == existingEmoji.isRandom() ? null : emoji.isRandom();
 
                 List<Keyword> addedKeywords = Lists.newArrayList();
-                Map<String, Boolean> changedKeywords = new HashMap<>();
+                List<KeywordChangingEvent> changedKeywords = Lists.newArrayList();
 
                 for (Keyword keyword : emoji.getKeywords()) {
                     Keyword existingKeyword = existingEmoji.getKeyword(keyword.getKeywordValue());
@@ -76,7 +77,7 @@ public class PersistenceManager {
                         addedKeywords.add(keyword);
                     } else {
                         if (keyword.isReplace() != existingKeyword.isReplace()) {
-                            changedKeywords.put(keyword.getKeywordValue(), keyword.isReplace());
+                            changedKeywords.add(new KeywordChangingEvent(emoji, existingKeyword, keyword));
                         }
                     }
                 }
@@ -144,6 +145,103 @@ public class PersistenceManager {
         context.fireEmojiChanging(changes);
     }
 
+    /**
+     * Merges emojis with the same value
+     *
+     * @param duplicateEmojis Emojis there are duplicates of
+     */
+    public void mergeDuplicateEmojis(Set<Emoji> duplicateEmojis) {
+        // new emojis replacing duplicates
+        List<Emoji> newEmojis = Lists.newArrayList();
+        for (Emoji duplicateEmoji : duplicateEmojis) {
+            // get all Emoji instances with that value
+            List<Emoji> duplicates = getAllEmojis(duplicateEmoji.getEmojiValue());
+            // get all Keywords of all duplicates
+            List<Keyword> keywords = Emoji.getAllKeywords(duplicates);
+
+            // set random to true if any of the duplicates is true since it's the default value
+            boolean random = duplicates.stream().anyMatch(Emoji::isRandom);
+            if (duplicates.stream().allMatch(e -> e instanceof DiscordEmoji)) {
+                newEmojis.add(new DiscordEmoji(
+                    keywords,
+                    duplicateEmoji.getEmojiValue(),
+                    random,
+                    ((DiscordEmoji) duplicateEmoji).getName(),
+                    ((DiscordEmoji) duplicateEmoji).getGuildId(),
+                    ((DiscordEmoji) duplicateEmoji).getGuildName()
+                ));
+
+                duplicates.forEach(e -> e.setState(Emoji.State.DELETION));
+            } else if (duplicates.stream().noneMatch(e -> e instanceof DiscordEmoji)) {
+                newEmojis.add(new Emoji(keywords, duplicateEmoji.getEmojiValue(), random));
+                duplicates.forEach(e -> e.setState(Emoji.State.DELETION));
+            } else {
+                throw new IllegalStateException("Not all duplicates of " + duplicateEmoji.getEmojiValue()
+                    + " are of the same type. Merging failed.");
+            }
+        }
+
+        for (Emoji newEmoji : newEmojis) {
+            context.addEmojiToMemory(newEmoji);
+        }
+    }
+
+    /**
+     * merges duplicate Keywords on the same Emoji
+     *
+     * @param duplicateKeywords Map with Keywords there are duplicates of and their emoji as key
+     */
+    public void mergeDuplicateKeywords(Multimap<Emoji, Keyword> duplicateKeywords) {
+        // loop over all emojis that have duplicate keywords
+        for (Emoji emoji : duplicateKeywords.keySet()) {
+            emoji.setState(Emoji.State.TOUCHED);
+            // loop over the different keywords there are duplicates of
+            for (Keyword keyword : duplicateKeywords.get(emoji)) {
+                List<Keyword> duplicates = emoji.getDuplicatesOf(keyword);
+                boolean replace = duplicates.stream().allMatch(Keyword::isReplace);
+                Keyword replacement = new Keyword(keyword.getKeywordValue(), replace);
+                emoji.getState().addChanges(new DuplicateKeywordEvent(replacement, duplicates, emoji), context);
+            }
+        }
+    }
+
+    public void applyDuplicateKeywordEvent(DuplicateKeywordEvent event) {
+        Emoji emoji = event.getSource();
+        event.getDuplicates().forEach(emoji::removeAll);
+        emoji.addKeyword(event.getReplacement());
+
+        context.fireEmojiChanging(event);
+    }
+
+    public void handleUpperCaseKeywords(Multimap<Emoji, Keyword> upperCaseKeywords) {
+        for (Emoji emoji : upperCaseKeywords.keys()) {
+            emoji.setState(Emoji.State.TOUCHED);
+            List<KeywordChangingEvent> keywordChanges = Lists.newArrayList();
+            Collection<Keyword> keywords = upperCaseKeywords.get(emoji);
+
+            for (Keyword keyword : keywords) {
+                keywordChanges.add(new KeywordChangingEvent(
+                    emoji,
+                    keyword,
+                    new Keyword(keyword.getKeywordValue().toLowerCase(), keyword.isReplace())));
+            }
+
+            emoji.getState().addChanges(new UpperCaseKeywordEvent(Lists.newArrayList(keywordChanges), emoji), context);
+        }
+    }
+
+    /**
+     * used to load duplicate Emojis
+     *
+     * @param emojiValue value of the emojis
+     * @return all Emoji instances with specified value
+     */
+    private List<Emoji> getAllEmojis(String emojiValue) {
+        return context.getInMemoryEmojis().stream()
+            .filter(e -> e.getEmojiValue().equals(emojiValue))
+            .collect(Collectors.toList());
+    }
+
     public List<Emoji> getAllEmojis() {
         Iterable<Emoji> concatList = Iterables.concat(getUnicodeEmojis(), getDiscordEmojis());
         return Lists.newArrayList(concatList);
@@ -191,6 +289,20 @@ public class PersistenceManager {
             }
         }
 
+        // remove before adding in case it is a DuplicateKeywordEvent (meaning the added and removed keywords have the same value)
+        List<Keyword> removedKeywords = changes.getRemovedKeywords();
+        if (removedKeywords != null && !removedKeywords.isEmpty()) {
+            if (isCommit) {
+                if (changes instanceof DuplicateKeywordEvent) {
+                    xmlManager.removeAllKeywords(emoji, removedKeywords);
+                } else {
+                    xmlManager.removeKeywords(emoji, removedKeywords);
+                }
+            } else {
+                removedKeywords.forEach(emoji::removeKeyword);
+            }
+        }
+
         List<Keyword> addedKeywords = changes.getAddedKeywords();
         if (addedKeywords != null && !addedKeywords.isEmpty()) {
             if (isCommit) {
@@ -200,24 +312,20 @@ public class PersistenceManager {
             }
         }
 
-        List<Keyword> removedKeywords = changes.getRemovedKeywords();
-        if (removedKeywords != null && !removedKeywords.isEmpty()) {
-            if (isCommit) {
-                xmlManager.removeKeywords(emoji, removedKeywords);
-            } else {
-                removedKeywords.forEach(emoji::removeKeyword);
-            }
-        }
-
-        Map<String, Boolean> changedKeywords = changes.getChangedKeywords();
+        List<KeywordChangingEvent> changedKeywords = changes.getChangedKeywords();
         if (changedKeywords != null && !changedKeywords.isEmpty()) {
             if (isCommit) {
                 xmlManager.adjustKeywords(emoji, changedKeywords);
             } else {
-                for (String keywordValue : changedKeywords.keySet()) {
-                    Keyword keyword = emoji.requireKeyword(keywordValue);
-                    if (keyword.isReplace() != changedKeywords.get(keywordValue)) {
-                        keyword.setReplace(changedKeywords.get(keywordValue));
+                for (KeywordChangingEvent changedKeyword : changedKeywords) {
+                    Keyword existingKeyword = changedKeyword.getExistingKeyword();
+                    Keyword adjustedKeyword = changedKeyword.getAdjustedKeyword();
+
+                    if (existingKeyword.isReplace() != adjustedKeyword.isReplace()) {
+                        existingKeyword.setReplace(adjustedKeyword.isReplace());
+                    }
+                    if (!existingKeyword.getKeywordValue().equals(adjustedKeyword.getKeywordValue())) {
+                        existingKeyword.setKeywordValue(adjustedKeyword.getKeywordValue());
                     }
                 }
             }

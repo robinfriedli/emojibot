@@ -363,6 +363,7 @@ public class EmojiAddingService {
         alertService.alertRemovedKeywords(StringListImpl.join(emojis, discordEmojiValues).getValues(), removedKeywords, missingKeywords, channel);
     }
 
+    @Deprecated
     public void mergeDuplicateEmojis(Set<String> duplicateEmojis, @Nullable MessageChannel channel) {
         Document doc = emojiLoadingService.getDocument();
         Element rootElem = doc.getDocumentElement();
@@ -423,6 +424,7 @@ public class EmojiAddingService {
         alertService.alertMergedEmojis(mergedEmojis, channel);
     }
 
+    @Deprecated
     public void mergeDuplicateKeywords(Multimap<String, String> emojisWithDuplicateKeywords, @Nullable MessageChannel channel) {
         Document doc = emojiLoadingService.getDocument();
 
@@ -469,6 +471,7 @@ public class EmojiAddingService {
         alertService.alertMergedKeywords(mergedKeywords, channel);
     }
 
+    @Deprecated
     public void setKeywordsToLowerCase(@Nullable MessageChannel channel) {
         Document doc = emojiLoadingService.getDocument();
         List<Element> keywordElems = nodeListToElementList(doc.getElementsByTagName("keyword"));

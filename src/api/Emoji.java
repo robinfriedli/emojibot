@@ -240,11 +240,19 @@ public class Emoji {
             public void addChanges(EmojiChangingEvent emojiChangingEvent, Context context) {
                 changes.add(emojiChangingEvent);
                 Emoji source = emojiChangingEvent.getSource();
-                context.executePersistTask(false, persistenceManager -> {
-                        persistenceManager.applyEmojiChanges(source, emojiChangingEvent);
+
+                if (emojiChangingEvent instanceof DuplicateKeywordEvent) {
+                    context.executePersistTask(false, persistenceManager -> {
+                        persistenceManager.applyDuplicateKeywordEvent((DuplicateKeywordEvent) emojiChangingEvent);
                         return null;
-                    }
-                );
+                    });
+                } else {
+                    context.executePersistTask(false, persistenceManager -> {
+                            persistenceManager.applyEmojiChanges(source, emojiChangingEvent);
+                            return null;
+                        }
+                    );
+                }
             }
 
             @Override

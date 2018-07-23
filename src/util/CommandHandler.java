@@ -14,11 +14,11 @@ import api.Keyword;
 import api.StringList;
 import api.StringListImpl;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import core.Context;
-import core.EmojiAddingService;
 import core.EmojiLoadingService;
 import core.SettingsLoader;
 import core.TextManipulationService;
@@ -382,33 +382,45 @@ public class CommandHandler {
      * @param channel
      */
     public void cleanXml(@Nullable MessageChannel channel) {
-        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-        EmojiAddingService emojiAddingService = new EmojiAddingService();
-        List<Emoji> emojis = emojiLoadingService.loadEmojis();
+        List<Emoji> emojis = context.getUseableEmojis();
 
-        Set<String> duplicateEmojis = getDuplicateEmojis(emojis);
-        List<String> upperCaseKeywords = getUpperCaseKeywords(emojis);
-        Multimap<String, String> duplicateKeywords = getDuplicateKeywords(emojis);
+        Set<Emoji> duplicateEmojis = getDuplicateEmojis(emojis);
+        Multimap<Emoji, Keyword> upperCaseKeywords = getUpperCaseKeywords(emojis);
+        Multimap<Emoji, Keyword> duplicateKeywords = getDuplicateKeywords(emojis);
 
         if (duplicateEmojis.isEmpty() && duplicateKeywords.isEmpty() && upperCaseKeywords.isEmpty()) {
             alertService.send("No configuration errors found.", channel);
         } else {
             if (!duplicateEmojis.isEmpty()) {
-                emojiAddingService.mergeDuplicateEmojis(duplicateEmojis, channel);
-                //check again for duplicate keywords after merging emojis
-                emojis = emojiLoadingService.loadEmojis();
+                context.executePersistTask(true, persistenceManager -> {
+                    persistenceManager.mergeDuplicateEmojis(duplicateEmojis);
+                    return null;
+                }, channel);
+                // check again for duplicate and upper case keywords after merging emojis since the emojis have changed
+                emojis = context.getUseableEmojis();
+                upperCaseKeywords = getUpperCaseKeywords(emojis);
                 duplicateKeywords = getDuplicateKeywords(emojis);
             }
 
             if (!upperCaseKeywords.isEmpty()) {
-                emojiAddingService.setKeywordsToLowerCase(channel);
+                // variables used in lambda must be final
+                Multimap<Emoji, Keyword> finalUpperCaseKeywords = upperCaseKeywords;
+                context.executePersistTask(true, persistenceManager -> {
+                    persistenceManager.handleUpperCaseKeywords(finalUpperCaseKeywords);
+                    return null;
+                }, channel);
                 //might also result in duplicate keywords so reload (E, e -> e, e)
-                emojis = emojiLoadingService.loadEmojis();
+                emojis = context.getUseableEmojis();
                 duplicateKeywords = getDuplicateKeywords(emojis);
             }
 
             if (!duplicateKeywords.isEmpty()) {
-                emojiAddingService.mergeDuplicateKeywords(duplicateKeywords, channel);
+                // variables used in lambda must be final
+                Multimap<Emoji, Keyword> finalDuplicateKeywords = duplicateKeywords;
+                context.executePersistTask(true, persistenceManager -> {
+                    persistenceManager.mergeDuplicateKeywords(finalDuplicateKeywords);
+                    return null;
+                }, channel);
             }
         }
     }
@@ -452,9 +464,9 @@ public class CommandHandler {
         }
     }
 
-    private Set<String> getDuplicateEmojis(List<Emoji> emojis) {
+    private Set<Emoji> getDuplicateEmojis(List<Emoji> emojis) {
         Set<String> checkedEmojis = Sets.newHashSet();
-        Set<String> duplicateEmojis = Sets.newHashSet();
+        Set<Emoji> duplicateEmojis = Sets.newHashSet();
 
         for (Emoji emoji : emojis) {
             String emojiValue = emoji.getEmojiValue();
@@ -463,15 +475,15 @@ public class CommandHandler {
             if (!checkedEmojis.contains(emojiValue)) {
                 checkedEmojis.add(emojiValue);
             } else {
-                duplicateEmojis.add(emojiValue);
+                duplicateEmojis.add(emoji);
             }
         }
 
         return duplicateEmojis;
     }
 
-    private Multimap<String, String> getDuplicateKeywords(List<Emoji> emojis) {
-        Multimap<String, String> emojisWithDuplicateKeywords = ArrayListMultimap.create();
+    private Multimap<Emoji, Keyword> getDuplicateKeywords(List<Emoji> emojis) {
+        Multimap<Emoji, Keyword> emojisWithDuplicateKeywords = ArrayListMultimap.create();
 
         for (Emoji emoji : emojis) {
             List<Keyword> keywords = emoji.getKeywords();
@@ -484,12 +496,12 @@ public class CommandHandler {
                     checkedKeywords.add(keywordValue);
                 }
                 //if keyword comes up again, meaning it is duplicate, check if emoji is already in the multimap
-                else if (!emojisWithDuplicateKeywords.containsKey(emoji.getEmojiValue())) {
-                    emojisWithDuplicateKeywords.put(emoji.getEmojiValue(), keywordValue);
+                else if (!emojisWithDuplicateKeywords.containsKey(emoji)) {
+                    emojisWithDuplicateKeywords.put(emoji, keyword);
                 }
                 //if emoji was already added check if the same particular keyword has already been added
-                else if (!emojisWithDuplicateKeywords.get(emoji.getEmojiValue()).contains(keywordValue)) {
-                    emojisWithDuplicateKeywords.put(emoji.getEmojiValue(), keywordValue);
+                else if (emojisWithDuplicateKeywords.get(emoji).stream().noneMatch(k -> k.getKeywordValue().equals(keywordValue))) {
+                    emojisWithDuplicateKeywords.put(emoji, keyword);
                 }
             }
         }
@@ -497,13 +509,16 @@ public class CommandHandler {
         return emojisWithDuplicateKeywords;
     }
 
-    private List<String> getUpperCaseKeywords(List<Emoji> emojis) {
-        List<Keyword> keywords = Emoji.getAllKeywords(emojis);
+    private Multimap<Emoji, Keyword> getUpperCaseKeywords(List<Emoji> emojis) {
+        Multimap<Emoji, Keyword> upperCaseKeywords = HashMultimap.create();
 
-        return keywords.stream()
-            .filter(k -> !k.getKeywordValue().equals(k.getKeywordValue().toLowerCase()))
-            .map(Keyword::getKeywordValue)
-            .collect(Collectors.toList());
+        for (Emoji emoji : emojis) {
+            emoji.getKeywords().stream()
+                .filter(k -> !k.getKeywordValue().equals(k.getKeywordValue().toLowerCase()))
+                .forEach(k -> upperCaseKeywords.put(emoji, k));
+        }
+
+        return upperCaseKeywords;
     }
 
     private List<Integer> findQuotations(String input) {

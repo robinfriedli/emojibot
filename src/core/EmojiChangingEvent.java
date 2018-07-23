@@ -2,7 +2,6 @@ package core;
 
 
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -24,12 +23,12 @@ public class EmojiChangingEvent extends Event {
     private final List<Keyword> removedKeywords;
 
     @Nullable
-    private final Map<String, Boolean> changedKeywords;
+    private final List<KeywordChangingEvent> changedKeywords;
 
     public EmojiChangingEvent(@Nullable Boolean changedRandomTag,
                               @Nullable List<Keyword> addedKeywords,
                               @Nullable List<Keyword> removedKeywords,
-                              @Nullable Map<String, Boolean> changedKeywords,
+                              @Nullable List<KeywordChangingEvent> changedKeywords,
                               Emoji sourceEmoji) {
         super(sourceEmoji);
         this.changedRandomTag = changedRandomTag;
@@ -54,7 +53,7 @@ public class EmojiChangingEvent extends Event {
     }
 
     @Nullable
-    public Map<String, Boolean> getChangedKeywords() {
+    public List<KeywordChangingEvent> getChangedKeywords() {
         return this.changedKeywords;
     }
 }

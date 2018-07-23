@@ -2,7 +2,6 @@ package core;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -63,7 +62,16 @@ public class XmlManager {
     public <E extends Emoji> void removeEmojiElem(E emoji) {
         Element rootElem = doc.getDocumentElement();
         String tagName = emoji instanceof DiscordEmoji ? "discord-emoji" : "emoji";
-        rootElem.removeChild(requireEmojiElem(tagName, emoji.getEmojiValue()));
+        try {
+            rootElem.removeChild(requireEmojiElem(tagName, emoji.getEmojiValue()));
+        } catch (IllegalStateException e) {
+            System.out.println("Duplicate emoji detected: " + emoji.getEmojiValue());
+            // remove all duplicated
+            List<Element> emojiElems = nodeListToElementList(doc.getElementsByTagName(tagName));
+            emojiElems.stream()
+                .filter(elem -> elem.getAttribute("value").equals(emoji.getEmojiValue()))
+                .forEach(rootElem::removeChild);
+        }
     }
 
     public <E extends Emoji> void adjustEmojiElem(E emoji, boolean random) {
@@ -106,13 +114,43 @@ public class XmlManager {
         }
     }
 
-    public <E extends Emoji> void adjustKeywords(E emoji, Map<String, Boolean> changedKeywords) {
+    /**
+     * used to delete keywords with duplicates
+     *
+     * @param emoji to delete keywords from
+     * @param keywords with duplicates
+     * @param <E> Emoji or a subclass e.g. DiscordEmoji
+     */
+    public <E extends Emoji> void removeAllKeywords(E emoji, List<Keyword> keywords) {
         String tagName = emoji instanceof DiscordEmoji ? "discord-emoji" : "emoji";
         Element emojiElem = requireEmojiElem(tagName, emoji.getEmojiValue());
 
-        for (String keywordValue : changedKeywords.keySet()) {
-            Element keywordElem = requireKeywordElem(emojiElem, keywordValue);
-            keywordElem.setAttribute("replace", Boolean.toString(changedKeywords.get(keywordValue)));
+        for (Keyword keyword : keywords) {
+            List<Element> keywordElems = nodeListToElementList(emojiElem.getElementsByTagName("keyword"));
+            keywordElems.stream()
+                .filter(k -> k.getTextContent().equals(keyword.getKeywordValue()))
+                .forEach(emojiElem::removeChild);
+        }
+    }
+
+    public <E extends Emoji> void adjustKeywords(E emoji, List<KeywordChangingEvent> changedKeywords) {
+        String tagName = emoji instanceof DiscordEmoji ? "discord-emoji" : "emoji";
+        Element emojiElem = requireEmojiElem(tagName, emoji.getEmojiValue());
+
+        for (KeywordChangingEvent keywordChangingEvent : changedKeywords) {
+            String oldKeywordValue = keywordChangingEvent.getOldValue();
+            Keyword adjustedKeyword = keywordChangingEvent.getAdjustedKeyword();
+
+            try {
+                Element keywordElem = requireKeywordElem(emojiElem, oldKeywordValue);
+                keywordElem.setAttribute("replace", Boolean.toString(adjustedKeyword.isReplace()));
+                keywordElem.setTextContent(adjustedKeyword.getKeywordValue());
+            } catch (IllegalStateException e) {
+                System.out.println("Duplicate Keyword detected: " + oldKeywordValue);
+                nodeListToElementList(emojiElem.getElementsByTagName("keyword")).stream()
+                    .filter(k -> k.getTextContent().equals(oldKeywordValue))
+                    .forEach(k -> k.setTextContent(adjustedKeyword.getKeywordValue()));
+            }
         }
     }
 
