@@ -19,7 +19,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import core.Context;
-import core.EmojiLoadingService;
 import core.SettingsLoader;
 import core.TextManipulationService;
 import net.dv8tion.jda.core.entities.Emote;
@@ -82,14 +81,13 @@ public class CommandHandler {
             }
         }
 
-        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
-        List<Emoji> emojis = emojiLoadingService.loadEmojis();
+        List<Emoji> emojis = context.getUnicodeEmojis();
 
         if (event != null) {
             guild = event.getGuild();
             message = event.getMessage();
             if (guild != null) {
-                List<DiscordEmoji> discordEmojisForGuild = DiscordEmoji.getForGuild(emojiLoadingService.loadDiscordEmojis(), guild.getId());
+                List<DiscordEmoji> discordEmojisForGuild = DiscordEmoji.getForGuild(context.getDiscordEmojis(), guild.getId());
                 emojis.addAll(discordEmojisForGuild);
             }
             responseBuilder.append("**").append(message.getAuthor().getName()).append("**").append(System.lineSeparator());
@@ -294,16 +292,15 @@ public class CommandHandler {
      * @param searchTerm matches value of keyword or emoji
      * @param channel Nullable; use if called from DiscordListener
      */
-    public void searchQuery(String searchTerm, @Nullable MessageChannel channel, @Nullable Guild guild) {
-        EmojiLoadingService emojiLoadingService = new EmojiLoadingService();
+    public void searchQuery(String searchTerm, @Nullable MessageChannel channel) {
         StringBuilder responseBuilder = new StringBuilder();
 
         if (searchTerm.startsWith(":") && searchTerm.endsWith(":")) {
             searchTerm = searchTerm.substring(1, searchTerm.length() - 1);
         }
 
-        List<Emoji> emojis = emojiLoadingService.loadEmojis();
-        List<DiscordEmoji> discordEmojis = emojiLoadingService.loadDiscordEmojis();
+        List<Emoji> emojis = context.getUnicodeEmojis();
+        List<DiscordEmoji> discordEmojis = context.getDiscordEmojis();
 
         List<Keyword> keywords = Emoji.getAllKeywords(emojis);
         keywords.addAll(Emoji.getAllKeywords(discordEmojis));
