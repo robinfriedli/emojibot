@@ -176,11 +176,14 @@ public class CommandHandler {
                 randomTags.addAll(randomArgs);
             }
 
-            for (int i = 0; i < keywordList.length; i++) {
-                keywords[i] = new Keyword(keywordList[i], Boolean.parseBoolean(replaceTagList[i]));
-            }
-
             if (keywordsValid(replaceTagList, keywordList) && randomTagsValid(randomTags, emojiList)) {
+                for (int i = 0; i < keywordList.length; i++) {
+                    boolean replace = replaceTagList.length == 1
+                        ? Boolean.parseBoolean(replaceTagList[0])
+                        : Boolean.parseBoolean(replaceTagList[i]);
+                    keywords[i] = new Keyword(keywordList[i], replace);
+                }
+
                 for (int i = 0; i < emojiList.size(); i++) {
                     String emoji = emojiList.get(i);
                     boolean random = randomTags.isEmpty()
@@ -206,17 +209,28 @@ public class CommandHandler {
                 }, channel);
             } else {
                 StringBuilder builder = new StringBuilder();
-                builder.append("Invalid input.");
-                if (channel != null) builder.append(" See " + DiscordListener.COMMAND_HELP);
+
+                builder.append("There has to be one replace flag for each keyword or one for all").append(System.lineSeparator())
+                    .append("Replace and random tags have to be either 'true' or 'false'").append(System.lineSeparator())
+                    .append("Keywords have to be lower case").append(System.lineSeparator())
+                    .append("There has to be one random flag for each emoji, exactly one for all or no random flag at all");
+
+                if (channel != null) builder.append(System.lineSeparator()).append("See " + DiscordListener.COMMAND_HELP);
+
                 alertService.send(builder.toString(), channel);
             }
+        } else {
+            StringBuilder builder = new StringBuilder();
+            builder.append("Invalid input.");
+            if (channel != null) builder.append(" See " + DiscordListener.COMMAND_HELP);
+            alertService.send(builder.toString(), channel);
         }
 
     }
 
     private boolean keywordsValid(String[] replaceTags, String[] keywords) {
         return Arrays.stream(replaceTags).allMatch(s -> s.equals("true") || s.equals("false"))
-            && keywords.length == replaceTags.length
+            && (replaceTags.length == 1 || keywords.length == replaceTags.length)
             && Arrays.stream(keywords).allMatch(k -> k.equals(k.toLowerCase()));
     }
 
