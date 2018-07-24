@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class StringListImpl implements StringList {
@@ -29,7 +30,7 @@ public class StringListImpl implements StringList {
 
     @Override
     public String tryGet(int i) {
-        if (i < size()) {
+        if (i < size() && i >= 0) {
             return get(i);
         }
         return null;
@@ -152,13 +153,74 @@ public class StringListImpl implements StringList {
     public StringList filterWords() {
         StringList stringList = create();
         for (String value : values) {
-            Character[] chars = value.chars().mapToObj(c -> (char) c).toArray(Character[]::new);
+            Character[] chars = stringToCharacterArray(value);
             if (Arrays.stream(chars).allMatch(Character::isLetter)) {
                 stringList.add(value);
             }
         }
 
         return stringList;
+    }
+
+    @Override
+    public List<Integer> getWordPositions() {
+        List<Integer> positions = Lists.newArrayList();
+
+        for (int i = 0; i < this.size(); i++) {
+            String value = get(i);
+            Character[] chars = stringToCharacterArray(value);
+
+            if (Arrays.stream(chars).allMatch(Character::isLetter)) {
+                positions.add(i);
+            }
+        }
+
+        return positions;
+    }
+
+    @Override
+    public List<Integer> findPositionsOf(String s) {
+        return findPositionsOf(s, false);
+    }
+
+    @Override
+    public List<Integer> findPositionsOf(String s, boolean ignoreCase) {
+        List<Integer> positions = Lists.newArrayList();
+
+        for (int i = 0; i < size(); i++) {
+            String value = get(i);
+
+            if (ignoreCase ? s.equalsIgnoreCase(value) : s.equals(value)) {
+                positions.add(i);
+            }
+        }
+
+        return positions;
+    }
+
+    @Override
+    public boolean valuePrecededBy(int i, String s) {
+        if (i == 0) return false;
+        return get(i - 1).equals(s);
+    }
+
+    @Override
+    public boolean valuePrecededBy(List<Integer> indices, String s) {
+        return indices.stream().allMatch(i -> valuePrecededBy(i, s));
+    }
+
+    @Override
+    public void assertThat(Predicate<StringList> predicate, String errorMessage) throws AssertionError {
+        if (!predicate.test(this)) {
+            throw new AssertionError(errorMessage);
+        }
+    }
+
+    @Override
+    public void assertThat(Predicate<StringList> predicate) throws AssertionError {
+        if (!predicate.test(this)) {
+            throw new AssertionError();
+        }
     }
 
     public static StringList create(String string, String regex) {
@@ -259,5 +321,9 @@ public class StringListImpl implements StringList {
         }
 
         return stringList;
+    }
+
+    private Character[] stringToCharacterArray(String string) {
+        return string.chars().mapToObj(c -> (char) c).toArray(Character[]::new);
     }
 }

@@ -4,6 +4,7 @@ import javax.annotation.Nullable;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public interface StringList extends Iterable<String> {
@@ -140,4 +141,62 @@ public interface StringList extends Iterable<String> {
      */
     StringList filterWords();
 
+    /**
+     * @return all indices of StringList values that are words, meaning all characters are letters
+     */
+    List<Integer> getWordPositions();
+
+    /**
+     * find all indices of specified String within StringList
+     *
+     * @param s String to find
+     * @return occurrences of said String
+     */
+    List<Integer> findPositionsOf(String s);
+
+    /**
+     * find all indices of specified String within StringList
+     *
+     * @param s String to find
+     * @param ignoreCase define if you want to find matches regardless of capitalisation
+     * @return occurrences of said String
+     */
+    List<Integer> findPositionsOf(String s, boolean ignoreCase);
+
+    /**
+     * checks if value at index is preceded by String s
+     *
+     * @param index of value
+     * @param s String to check if precedes value at index
+     */
+    boolean valuePrecededBy(int index, String s);
+
+    /**
+     * checks if all values at the specified indices are preceded by String s
+     *
+     * @param indices of values to check
+     * @param s String to check if precedes values at indices
+     */
+    boolean valuePrecededBy(List<Integer> indices, String s);
+
+    /**
+     * assert that any condition from one of the StringList methods is true
+     *
+     * e.g stringList.assertThat(p -> p.valuePrecededBy(3, "-"), "value at 3 not preceded by -")
+     *
+     * @param predicate  any StringList method that returns a boolean
+     * @param errorMessage message to throw if assertion fails
+     * @throws AssertionError if assertion fails
+     */
+    void assertThat(Predicate<StringList> predicate, String errorMessage) throws AssertionError;
+
+    /**
+     * assert that any condition from one of the StringList methods is true
+     *
+     * e.g stringList.assertThat(p -> p.valuePrecededBy(3, "-"))
+     *
+     * @param predicate  any StringList method that returns a boolean
+     * @throws AssertionError if assertion fails
+     */
+    void assertThat(Predicate<StringList> predicate) throws AssertionError;
 }
