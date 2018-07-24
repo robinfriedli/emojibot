@@ -90,7 +90,7 @@ public class DiscordListener extends ListenerAdapter {
                 if (msg.startsWith(COMMAND_SETTINGS)) {
                     commandHandler.handleSettings(msg, message.getChannel());
                 }
-            } catch (IllegalArgumentException | IllegalStateException | UnsupportedOperationException e) {
+            } catch (IllegalArgumentException | IllegalStateException | UnsupportedOperationException | AssertionError e) {
                 e.printStackTrace();
                 message.getChannel().sendMessage(e.getMessage()).queue();
             }

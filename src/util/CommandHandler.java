@@ -62,7 +62,13 @@ public class CommandHandler {
         boolean replaceB = SettingsLoader.loadBoolProperty("REPLACE_B");
 
         if (args != null) {
-            StringList argList = StringListImpl.createWords(args).filterWords();
+            StringList argList = StringListImpl.createWords(args);
+
+            // assert that all arguments are properly formatted (-arg)
+            List<Integer> wordPositions = argList.getWordPositions();
+            argList.assertThat(p -> p.valuePrecededBy(wordPositions, "-"), "Invalid Argument. See " + DiscordListener.COMMAND_HELP);
+
+            argList = argList.filterWords();
             if (argList.stream().allMatch(arg ->
                 arg.equals(RAND_FORMAT_ARG)
                     || arg.equals(RAND_EMOJIS_ARG)
