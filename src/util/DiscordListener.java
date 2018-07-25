@@ -20,6 +20,7 @@ import java.util.List;
 public class DiscordListener extends ListenerAdapter {
 
     public static final String COMMAND_TRANSFORM = "e!e";
+    public static final String COMMAND_WHISPER = "e!whisper";
     public static final String COMMAND_ADD = "e!add";
     public static final String COMMAND_RM = "e!rm";
     public static final String COMMAND_HELP = "e!help";
@@ -57,6 +58,10 @@ public class DiscordListener extends ListenerAdapter {
             try {
                 if (msg.startsWith(COMMAND_TRANSFORM)) {
                     transformText(msg, message, event);
+                }
+
+                if (msg.startsWith(COMMAND_WHISPER)) {
+                    whisper(msg, message, event);
                 }
 
                 if (msg.startsWith(COMMAND_ADD)) {
@@ -107,7 +112,15 @@ public class DiscordListener extends ListenerAdapter {
         try {
             message.delete().queue();
         } finally {
-            commandHandler.transformText(msg.substring(COMMAND_TRANSFORM.length() + 1, msg.length()), event);
+            commandHandler.transformText(msg.substring(COMMAND_TRANSFORM.length() + 1), event, false);
+        }
+    }
+
+    private void whisper(String msg, Message message, MessageReceivedEvent event) {
+        try {
+            message.delete().queue();
+        } finally {
+            commandHandler.transformText(msg.substring(COMMAND_WHISPER.length() + 1), event, true);
         }
     }
 

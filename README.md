@@ -22,6 +22,11 @@ ________________________________________________________________________________
     arguments set property to the opposite of what's in the settings
     args: -rf (random formatting), -re (random emojis), -rb (replace b with 🅱️)
 
+### Whisper to users:
+
+    Syntax:
+    `e!whisper -arg1 -arg2 @user1 "text @user2 text"`
+
 ### List all saved emojis:
 
     Syntax:

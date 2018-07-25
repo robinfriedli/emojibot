@@ -5,6 +5,7 @@ import api.StringListImpl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.User;
 
 import javax.annotation.Nullable;
 
@@ -178,6 +179,15 @@ public class AlertService {
             }
         } else {
             System.out.println(message);
+        }
+    }
+
+    public void send(String message, User user) {
+        if (message.length() < MESSAGE_LENGTH_LIMIT) {
+            user.openPrivateChannel().queue(channel -> channel.sendMessage(message).queue());
+        } else {
+            List<String> outputParts = separateMessage(message);
+            outputParts.forEach(part -> user.openPrivateChannel().queue(channel -> channel.sendMessage(part).queue()));
         }
     }
 

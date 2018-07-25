@@ -23,6 +23,7 @@ import core.SettingsLoader;
 import core.TextManipulationService;
 import net.dv8tion.jda.core.entities.Emote;
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -40,7 +41,7 @@ public class CommandHandler {
         this.context = context;
     }
 
-    public void transformText(String command, @Nullable MessageReceivedEvent event) {
+    public void transformText(String command, @Nullable MessageReceivedEvent event, boolean isWhisper) {
         Message message = null;
         Guild guild = null;
         List<Integer> quotations = findQuotations(command);
@@ -50,7 +51,12 @@ public class CommandHandler {
         if (quotations.isEmpty()) {
             text = command;
         } else if (quotations.size() == 2) {
-            args = command.substring(0, quotations.get(0));
+            List<Integer> mentions = findOccurrences(command, "@");
+            if (isWhisper && !mentions.isEmpty() && mentions.get(0) < quotations.get(0)) {
+                args = command.substring(0, mentions.get(0));
+            } else {
+                args = command.substring(0, quotations.get(0));
+            }
             text = command.substring(quotations.get(0) + 1, quotations.get(1));
         } else {
             throw new IllegalArgumentException("Invalid input. See " + DiscordListener.COMMAND_HELP);
@@ -96,12 +102,22 @@ public class CommandHandler {
                 List<DiscordEmoji> discordEmojisForGuild = DiscordEmoji.getForGuild(context.getDiscordEmojis(), guild.getId());
                 emojis.addAll(discordEmojisForGuild);
             }
-            responseBuilder.append("**").append(message.getAuthor().getName()).append("**").append(System.lineSeparator());
+            if (!isWhisper) {
+                responseBuilder.append("**").append(message.getAuthor().getName()).append("**").append(System.lineSeparator());
+            }
         }
 
         TextManipulationService manipulationService = new TextManipulationService(randFormat, randEmojis, replaceB, emojis, guild);
         responseBuilder.append(manipulationService.getOutput(text));
-        alertService.send(responseBuilder.toString(), message != null ? message.getChannel() : null);
+
+        if (isWhisper && message != null) {
+            List<Member> mentionedMembers = message.getMentionedMembers();
+            for (Member member : mentionedMembers) {
+                alertService.send(responseBuilder.toString(), member.getUser());
+            }
+        } else {
+            alertService.send(responseBuilder.toString(), message != null ? message.getChannel() : null);
+        }
     }
 
     /**
@@ -221,7 +237,9 @@ public class CommandHandler {
                     .append("Keywords have to be lower case").append(System.lineSeparator())
                     .append("There has to be one random flag for each emoji, exactly one for all or no random flag at all");
 
-                if (channel != null) builder.append(System.lineSeparator()).append("See " + DiscordListener.COMMAND_HELP);
+                if (channel != null) {
+                    builder.append(System.lineSeparator()).append("See " + DiscordListener.COMMAND_HELP);
+                }
 
                 alertService.send(builder.toString(), channel);
             }
@@ -539,8 +557,12 @@ public class CommandHandler {
     }
 
     private List<Integer> findQuotations(String input) {
+        return findOccurrences(input, "\"");
+    }
+
+    private List<Integer> findOccurrences(String input, String s) {
         List<Integer> positions = Lists.newArrayList();
-        for (int i = 0; (i = input.toLowerCase().indexOf("\"", i)) >= 0; i++) {
+        for (int i = 0; (i = input.toLowerCase().indexOf(s, i)) >= 0; i++) {
             positions.add(i);
         }
 

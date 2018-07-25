@@ -75,7 +75,7 @@ public class Launcher {
     private static void transformText() {
         System.out.println("Enter text to transform. Put text in quotation marks if you want to add arguments '-arg1 -arg2 \"text\"'");
         Scanner sc = new Scanner(System.in);
-        commandHandler.transformText(sc.nextLine(), null);
+        commandHandler.transformText(sc.nextLine(), null, false);
 
         showMenu();
     }
