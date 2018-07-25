@@ -1,9 +1,5 @@
 package util;
 
-import java.util.List;
-
-import javax.security.auth.login.LoginException;
-
 import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
@@ -13,11 +9,13 @@ import core.TextLoadingService;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
-import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+
+import javax.security.auth.login.LoginException;
+import java.util.List;
 
 public class DiscordListener extends ListenerAdapter {
 
@@ -129,7 +127,7 @@ public class DiscordListener extends ListenerAdapter {
             StringBuilder builder = new StringBuilder();
             builder.append(emoji.getEmojiValue()).append("\trandom: ").append(emoji.isRandom());
 
-            outputParts = listKeywords(emoji, builder, outputParts);
+            listKeywords(emoji, builder, outputParts);
         }
 
         if (!discordEmojis.isEmpty()) outputParts.add("Emojis from guilds:\n");
@@ -139,7 +137,7 @@ public class DiscordListener extends ListenerAdapter {
                 .append("\t").append(discordEmoji.getGuildName())
                 .append("\t").append("random: ").append(discordEmoji.isRandom());
 
-            outputParts = listKeywords(discordEmoji, builder, outputParts);
+            listKeywords(discordEmoji, builder, outputParts);
         }
 
         for (String outputPart : outputParts) {
@@ -147,7 +145,7 @@ public class DiscordListener extends ListenerAdapter {
         }
     }
 
-    private List<String> listKeywords(Emoji emoji, StringBuilder builder, List<String> outputParts) {
+    private void listKeywords(Emoji emoji, StringBuilder builder, List<String> outputParts) {
         List<Keyword> keywords = emoji.getKeywords();
         for (int i = 0; i < keywords.size(); i++) {
             if (i == 0) builder.append("\t");
@@ -166,8 +164,6 @@ public class DiscordListener extends ListenerAdapter {
         } else {
             outputParts.add(builder.toString());
         }
-
-        return outputParts;
     }
 
     private void searchQuery(Message message, String msg) {
