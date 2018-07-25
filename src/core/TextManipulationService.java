@@ -215,9 +215,9 @@ public class TextManipulationService {
 
     private boolean isWord(String prevWord, String word, String nextWord) {
         Character[] chars = word.chars().mapToObj(c -> (char) c).toArray(Character[]::new);
-        //check that the word is not surrounded by ':' in which case it's most likely a discord emoji
+        //check that the word is not surrounded by ':' or '<'':' in which case it's most likely a discord emoji
         return Arrays.stream(chars).allMatch(Character::isLetter)
-            && !(prevWord.equals(":") && nextWord.equals(":"));
+            && !((prevWord.equals(":") || prevWord.equals("<")) && nextWord.equals(":"));
     }
 
 }
