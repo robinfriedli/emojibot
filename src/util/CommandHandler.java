@@ -320,7 +320,11 @@ public class CommandHandler {
 
             for (String emoji : emojiList) {
                 context.executePersistTask(true, persistenceManager -> {
-                    persistenceManager.deleteKeywords(emoji, keywordList);
+                    try {
+                        persistenceManager.deleteKeywords(emoji, keywordList);
+                    } catch (IllegalStateException e) {
+                        alertService.send(e.getMessage(), channel);
+                    }
                     return null;
                 }, channel);
             }
