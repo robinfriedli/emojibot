@@ -1,16 +1,20 @@
 package core;
 
-import api.*;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import net.dv8tion.jda.core.entities.Emote;
-import net.dv8tion.jda.core.entities.Guild;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import api.DiscordEmoji;
+import api.Emoji;
+import api.Keyword;
+import api.StringList;
+import api.StringListImpl;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import net.dv8tion.jda.core.entities.Emote;
+import net.dv8tion.jda.core.entities.Guild;
 
 /**
  * Transform given input
@@ -23,6 +27,7 @@ public class TextManipulationService {
     private final boolean randFormat;
     private final boolean randEmojis;
     private final boolean replaceB;
+    private final boolean replaceWordPart;
     private final List<Emoji> emojis;
     private final List<Keyword> keywords;
     private final Guild guild;
@@ -32,10 +37,16 @@ public class TextManipulationService {
     private static List<String> wrappersEnd =
         ImmutableList.of("_", "**", "***", "__", "*__", "**__", "***__", "~~");
 
-    public TextManipulationService(boolean randFormat, boolean randEmojis, boolean replaceB, List<Emoji> emojis, Guild guild) {
+    public TextManipulationService(boolean randFormat,
+                                   boolean randEmojis,
+                                   boolean replaceB,
+                                   boolean replaceWordPart,
+                                   List<Emoji> emojis,
+                                   Guild guild) {
         this.randFormat = randFormat;
         this.randEmojis = randEmojis;
         this.replaceB = replaceB;
+        this.replaceWordPart = replaceWordPart;
         this.emojis = emojis;
         this.keywords = Emoji.getAllKeywords(emojis);
         this.guild = guild;
@@ -86,7 +97,7 @@ public class TextManipulationService {
             //load exact word from input string so that capitalisation is not lost
             String word = (String) input.subSequence(occurrences.get(i), occurrences.get(i) + keywordValue.length());
             //check if the keyword is part of a word
-            if (isFullWord(input, occurrences.get(i), occurrences.get(i) + keywordValue.length())) {
+            if (replaceWordPart || isFullWord(input, occurrences.get(i), occurrences.get(i) + keywordValue.length())) {
                 if (replace) {
                     builder.append(getEmojiString(keyword));
                 } else {

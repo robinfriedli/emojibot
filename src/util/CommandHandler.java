@@ -1,7 +1,9 @@
 package util;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,9 +32,15 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 public class CommandHandler {
 
-    private static final String RAND_FORMAT_ARG = "rf";
-    private static final String RAND_EMOJIS_ARG = "re";
-    private static final String REPLACE_B_ARG = "rb";
+    private static final Map<String, String> ARG_MAP;
+
+    static {
+        ARG_MAP = new HashMap<>();
+        ARG_MAP.put("RAND_FORMAT_ARG", "rf");
+        ARG_MAP.put("RAND_EMOJIS_ARG", "re");
+        ARG_MAP.put("REPLACE_B_ARG", "rb");
+        ARG_MAP.put("REPLACE_WORDPART_ARG", "rw");
+    }
 
     private AlertService alertService = new AlertService();
     private final Context context;
@@ -66,6 +74,7 @@ public class CommandHandler {
         boolean randFormat = SettingsLoader.loadBoolProperty("RAND_FORMAT");
         boolean randEmojis = SettingsLoader.loadBoolProperty("RAND_EMOJIS");
         boolean replaceB = SettingsLoader.loadBoolProperty("REPLACE_B");
+        boolean replaceWordPart = SettingsLoader.loadBoolProperty("REPLACE_WORDPART");
 
         if (args != null) {
             StringList argList = StringListImpl.createWords(args);
@@ -75,18 +84,18 @@ public class CommandHandler {
             argList.assertThat(p -> p.valuePrecededBy(wordPositions, "-"), "Invalid Argument. See " + DiscordListener.COMMAND_HELP);
 
             argList = argList.filterWords();
-            if (argList.stream().allMatch(arg ->
-                arg.equals(RAND_FORMAT_ARG)
-                    || arg.equals(RAND_EMOJIS_ARG)
-                    || arg.equals(REPLACE_B_ARG))) {
-                if (argList.contains(RAND_FORMAT_ARG)) {
+            if (argList.stream().allMatch(ARG_MAP::containsValue)) {
+                if (argList.contains(ARG_MAP.get("RAND_FORMAT_ARG"))) {
                     randFormat = !randFormat;
                 }
-                if (argList.contains(RAND_EMOJIS_ARG)) {
+                if (argList.contains(ARG_MAP.get("RAND_EMOJIS_ARG"))) {
                     randEmojis = !randEmojis;
                 }
-                if (argList.contains(REPLACE_B_ARG)) {
+                if (argList.contains(ARG_MAP.get("REPLACE_B_ARG"))) {
                     replaceB = !replaceB;
+                }
+                if (argList.contains(ARG_MAP.get("REPLACE_WORDPART_ARG"))) {
+                    replaceWordPart = !replaceWordPart;
                 }
             } else {
                 throw new IllegalArgumentException("Invalid Argument. See " + DiscordListener.COMMAND_HELP);
@@ -107,7 +116,7 @@ public class CommandHandler {
             }
         }
 
-        TextManipulationService manipulationService = new TextManipulationService(randFormat, randEmojis, replaceB, emojis, guild);
+        TextManipulationService manipulationService = new TextManipulationService(randFormat, randEmojis, replaceB, replaceWordPart, emojis, guild);
         responseBuilder.append(manipulationService.getOutput(text));
 
         if (isWhisper && message != null) {

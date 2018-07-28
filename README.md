@@ -21,6 +21,7 @@ ________________________________________________________________________________
     Notice:
     arguments set property to the opposite of what's in the settings
     args: -rf (random formatting), -re (random emojis), -rb (replace b with 🅱️)
+    -rw (replace keyword if part of word)
 
 ### Whisper to users:
 
