@@ -1,7 +1,5 @@
 package api;
 
-import com.google.common.collect.Lists;
-
 import java.text.BreakIterator;
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,6 +7,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
+import javax.annotation.Nonnull;
+
+import com.google.common.collect.Lists;
 
 public class StringListImpl implements StringList {
 
@@ -51,7 +53,8 @@ public class StringListImpl implements StringList {
     }
 
     @Override
-    public Iterator iterator() {
+    @Nonnull
+    public Iterator<String> iterator() {
         return values.iterator();
     }
 
