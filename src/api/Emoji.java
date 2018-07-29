@@ -100,28 +100,8 @@ public class Emoji {
         this.keywords.add(keyword);
     }
 
-    public void removeKeyword(Keyword keyword) {
-        List<Keyword> foundKeywords = Lists.newArrayList();
-        keywords.stream()
-            .filter(k -> k.equals(keyword))
-            .forEach(foundKeywords::add);
-
-        if (foundKeywords.size() == 1) {
-            keywords.remove(foundKeywords.get(0));
-        } else if (foundKeywords.isEmpty()) {
-            throw new IllegalStateException("No such keyword " + keyword.getKeywordValue() + " on Emoji " + this.getEmojiValue());
-        } else {
-            throw new IllegalStateException("Duplicate keyword " + keyword.getKeywordValue() + " on Emoji " + this.getEmojiValue()
-                + ". Try " + DiscordListener.COMMAND_CLEAN);
-        }
-    }
-
-    public boolean removeAll(Keyword keyword) {
-        boolean performed = false;
-        while (hasKeyword(keyword)) {
-            performed = keywords.remove(keyword);
-        }
-        return performed;
+    public boolean removeKeyword(Keyword keyword) {
+        return keywords.remove(keyword);
     }
 
     public String getEmojiValue() {

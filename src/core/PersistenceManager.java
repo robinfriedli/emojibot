@@ -207,7 +207,7 @@ public class PersistenceManager {
 
     public void applyDuplicateKeywordEvent(DuplicateKeywordEvent event) {
         Emoji emoji = event.getSource();
-        event.getDuplicates().forEach(emoji::removeAll);
+        event.getDuplicates().forEach(emoji::removeKeyword);
         emoji.addKeyword(event.getReplacement());
 
         context.fireEmojiChanging(event);
