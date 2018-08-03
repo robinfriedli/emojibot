@@ -152,9 +152,7 @@ public class TextManipulationService {
         List<DiscordEmoji> selectedDiscordEmojis = DiscordEmoji.getForKeyword(keyword, discordEmojis);
 
         for (DiscordEmoji selectedDiscordEmoji : selectedDiscordEmojis) {
-            for (Emote emote : guild.getEmotesByName(selectedDiscordEmoji.getName(), true)) {
-                builder.append(emote.getAsMention());
-            }
+            builder.append(selectedDiscordEmoji.getEmojiValue());
         }
 
         for (Emoji selectedEmoji : selectedEmojis) {
