@@ -1,106 +1,96 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <emojis xmlns="emojiSpace">
-    <emoji value="🌈">
-        <keyword replace="false">sevi</keyword>
-        <keyword replace="false">severin</keyword>
+    <emoji random="true" value="&#127752;">
         <keyword replace="false">gay</keyword>
     </emoji>
-    <emoji value="😂">
+    <emoji random="true" value="&#128514;">
         <keyword replace="true">lol</keyword>
     </emoji>
-    <emoji value="😎">
+    <emoji random="true" value="&#128526;">
         <keyword replace="false">cool</keyword>
         <keyword replace="true">dealwithit</keyword>
         <keyword replace="true">deal with it</keyword>
     </emoji>
-    <emoji value="🤔">
+    <emoji random="true" value="&#129300;">
         <keyword replace="false">thinking</keyword>
         <keyword replace="false">thonking</keyword>
         <keyword replace="true">hmmm</keyword>
     </emoji>
-    <emoji value="😤">
+    <emoji random="true" value="&#128548;">
         <keyword replace="false">smh</keyword>
         <keyword replace="true">steaming</keyword>
     </emoji>
-    <emoji value="👨‍❤️‍👨">
+    <emoji random="true" value="&#128104;‍❤️‍&#128104;">
         <keyword replace="false">gay</keyword>
     </emoji>
-    <emoji value="❤️">
-        <keyword replace="false">robin</keyword>
+    <emoji random="true" value="❤️">
         <keyword replace="true">heart</keyword>
         <keyword replace="true">&lt;3</keyword>
     </emoji>
-    <emoji value="🔥">
+    <emoji random="true" value="&#128293;">
         <keyword replace="false">lit</keyword>
         <keyword replace="false">fam</keyword>
     </emoji>
-    <emoji value="🤷">
-        <keyword replace="true">tja</keyword>
+    <emoji random="true" value="&#129335;">
         <keyword replace="true">well</keyword>
         <keyword replace="false">idk</keyword>
         <keyword replace="true">¯\_(ツ)_/¯</keyword>
     </emoji>
-    <emoji value="💩">
-        <keyword replace="false">sevi</keyword>
-        <keyword replace="false">severin</keyword>
+    <emoji random="true" value="&#128169;">
         <keyword replace="true">shit</keyword>
         <keyword replace="false">trash</keyword>
     </emoji>
-    <emoji value="🌚">
-        <keyword replace="false">sebi</keyword>
-    </emoji>
-    <emoji value="💁">
+    <emoji random="true" value="&#127770;"/>
+    <emoji random="true" value="&#128129;">
         <keyword replace="true">dealwithit</keyword>
         <keyword replace="true">deal with it</keyword>
     </emoji>
-    <emoji value="🙌">
+    <emoji random="true" value="&#128588;">
         <keyword replace="false">bless</keyword>
         <keyword replace="false">blessed</keyword>
     </emoji>
-    <emoji value="🤦">
+    <emoji random="true" value="&#129318;">
         <keyword replace="false">dumbass</keyword>
     </emoji>
-    <emoji value="😫"/>
-    <emoji value="😒"/>
-    <emoji value="😢"/>
-    <emoji value="😩"/>
-    <emoji value="🤧">
-        <keyword replace="false">eine kleine gruppe</keyword>
-    </emoji>
-    <emoji value="🤳"/>
-    <emoji value="👈"/>
-    <emoji value="👉"/>
-    <emoji value="👌">
+    <emoji random="true" value="&#128555;"/>
+    <emoji random="true" value="&#128530;"/>
+    <emoji random="true" value="&#128546;"/>
+    <emoji random="true" value="&#128553;"/>
+    <emoji random="true" value="&#129319;"/>
+    <emoji random="true" value="&#129331;"/>
+    <emoji random="true" value="&#128072;"/>
+    <emoji random="true" value="&#128073;"/>
+    <emoji random="true" value="&#128076;">
         <keyword replace="false">ok</keyword>
         <keyword replace="false">good shit</keyword>
     </emoji>
-    <emoji value="👍">
+    <emoji random="true" value="&#128077;">
         <keyword replace="false">guet</keyword>
         <keyword replace="false">good</keyword>
         <keyword replace="false">great</keyword>
     </emoji>
-    <emoji value="👎">
+    <emoji random="true" value="&#128078;">
         <keyword replace="false">bad</keyword>
         <keyword replace="false">shit</keyword>
         <keyword replace="false">schlecht</keyword>
     </emoji>
-    <emoji value="🤠"/>
-    <emoji value="🕺"/>
-    <emoji value="💪"/>
-    <emoji value="👊"/>
-    <emoji value="👏">
+    <emoji random="true" value="&#129312;"/>
+    <emoji random="true" value="&#128378;"/>
+    <emoji random="true" value="&#128170;"/>
+    <emoji random="true" value="&#128074;"/>
+    <emoji random="true" value="&#128079;">
         <keyword replace="false">wow</keyword>
         <keyword replace="false">good</keyword>
         <keyword replace="false">gj</keyword>
     </emoji>
-    <emoji value="💦">
+    <emoji random="true" value="&#128166;">
         <keyword replace="false">jizz</keyword>
     </emoji>
-    <emoji value="🙈"/>
-    <emoji value="🙉"/>
-    <emoji value="🙊"/>
-    <emoji value="🐐">
+    <emoji random="true" value="&#128584;"/>
+    <emoji random="true" value="&#128585;"/>
+    <emoji random="true" value="&#128586;"/>
+    <emoji random="true" value="&#128016;">
         <keyword replace="false">goat</keyword>
     </emoji>
-    <emoji value="🍆"/>
+    <emoji random="true" value="&#127814;"/>
 </emojis>

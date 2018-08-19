@@ -9,12 +9,11 @@ import java.util.stream.Collectors;
 import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
-import api.StringList;
-import api.StringListImpl;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import net.dv8tion.jda.core.entities.Emote;
 import net.dv8tion.jda.core.entities.Guild;
+import net.robinfriedli.stringlist.StringList;
+import net.robinfriedli.stringlist.StringListImpl;
 
 /**
  * Transform given input

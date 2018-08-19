@@ -1,5 +1,11 @@
 package core;
 
+import java.io.File;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
@@ -9,12 +15,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.File;
-import java.util.List;
-
 @Deprecated // deprecated as of v2.3, use PersistenceManager instead
+// useless and completely replaced by new Persistence API as of v2.4
 public class EmojiLoadingService {
 
     /**
@@ -38,7 +40,7 @@ public class EmojiLoadingService {
                 String emojiValue = elem.getAttribute("value");
                 String randomValue = elem.getAttribute("random");
                 boolean random = randomValue.equals("") || Boolean.parseBoolean(randomValue);
-                emojis.add(new Emoji(getKeywords(elem), emojiValue, random));
+                //emojis.add(new Emoji(getKeywords(elem), emojiValue, random));
             }
         }
 
@@ -62,7 +64,7 @@ public class EmojiLoadingService {
                 String emojiValue = elem.getAttribute("value");
                 String randomValue = elem.getAttribute("random");
                 boolean random = randomValue.equals("") || Boolean.parseBoolean(randomValue);
-                emojis.add(new DiscordEmoji(getKeywords(elem), emojiValue, random, name, guildId, guildName));
+                //emojis.add(new DiscordEmoji(getKeywords(elem), emojiValue, random, name, guildId, guildName));
             }
         }
 
@@ -77,7 +79,7 @@ public class EmojiLoadingService {
             Element keyElem = (Element) keywords.item(e);
             String keyword = keyElem.getTextContent();
             boolean replace = Boolean.parseBoolean(keyElem.getAttribute("replace"));
-            keywordList.add(new Keyword(keyword, replace));
+            //keywordList.add(new Keyword(keyword, replace));
         }
 
         return keywordList;

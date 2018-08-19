@@ -1,13 +1,13 @@
 package core;
 
-import api.StringList;
-import api.StringListImpl;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import net.dv8tion.jda.core.entities.Emote;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.MessageChannel;
+import net.robinfriedli.stringlist.StringList;
+import net.robinfriedli.stringlist.StringListImpl;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;

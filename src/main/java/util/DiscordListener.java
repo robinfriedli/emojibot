@@ -5,12 +5,17 @@ import api.Emoji;
 import api.Keyword;
 import com.google.common.collect.Lists;
 import core.Context;
+import core.ContextManager;
+import core.PersistenceManager;
 import core.TextLoadingService;
 import net.dv8tion.jda.core.AccountType;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
@@ -29,29 +34,50 @@ public class DiscordListener extends ListenerAdapter {
     public static final String COMMAND_CLEAN = "e!clean";
     public static final String COMMAND_SETTINGS = "e!settings";
 
-    private final Context context;
+    private final ContextManager contextManager;
     private final CommandHandler commandHandler;
+    private Mode mode;
+    private Guild guild;
 
-    public DiscordListener(Context context, CommandHandler commandHandler) {
-        this.context = context;
+    public DiscordListener(ContextManager contextManager, CommandHandler commandHandler) {
+        this.contextManager = contextManager;
         this.commandHandler = commandHandler;
     }
 
-    public void launch() {
+    public void launch(Mode mode) {
         try {
-            new JDABuilder(AccountType.BOT)
+            JDA jda = new JDABuilder(AccountType.BOT)
                 .setToken(TextLoadingService.loadToken())
                 .addEventListener(this)
-                .buildBlocking()
-                .getPresence().setGame(Game.playing(COMMAND_HELP));
+                .buildBlocking();
+            jda.getPresence().setGame(Game.playing(COMMAND_HELP));
+
+            if (mode == Mode.PARTITIONED) {
+                List<Guild> guilds = jda.getGuilds();
+                for (Guild guild : guilds) {
+                    contextManager.createBoundContext("./resources/emojis.xml", guild, guild.getId(), new PersistenceManager());
+                }
+            }
+            setMode(mode);
         } catch (LoginException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
     @Override
+    public void onGuildJoin(GuildJoinEvent event) {
+        if (getMode() == Mode.PARTITIONED) {
+            contextManager.createBoundContext("./resources/emojis.xml", event.getGuild(), event.getGuild().getId(), new PersistenceManager());
+        }
+    }
+
+    @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getMessage().getContentDisplay().startsWith("e!") && !event.getAuthor().isBot()) {
+            if (mode == Mode.PARTITIONED) {
+                guild = event.getGuild();
+                commandHandler.setContext(contextManager.getContext(guild));
+            }
             Message message = event.getMessage();
             String msg = message.getContentDisplay();
 
@@ -93,6 +119,18 @@ public class DiscordListener extends ListenerAdapter {
                 if (msg.startsWith(COMMAND_SETTINGS)) {
                     commandHandler.handleSettings(msg, message.getChannel());
                 }
+
+                if (msg.equals("e!test")) {
+                    Context context = contextManager.getContext(guild);
+                    context.invoke(false, () -> {
+                        new Emoji(Lists.newArrayList(), "mine",true ,context);
+
+                        Emoji craft = context.invoke(false, () -> new Emoji(Lists.newArrayList(), "craft", true, context));
+                        System.out.println(craft.toString());
+
+                    });
+                    context.commitAll();
+                }
             } catch (IllegalArgumentException | IllegalStateException | UnsupportedOperationException | AssertionError e) {
                 e.printStackTrace();
                 message.getChannel().sendMessage(e.getMessage()).queue();
@@ -127,11 +165,19 @@ public class DiscordListener extends ListenerAdapter {
     /**
      * lists all saved emojis with their keywords and the keywords replace flag
      *
-     * @param channel
+     * @param channel channel to send message to
      */
+    @SuppressWarnings("unchecked") // cast is safe since if the Element is not a DiscordEmoji it must be an Emoji
     private void listEmojis(MessageChannel channel) {
-        List<Emoji> emojis = context.getUnicodeEmojis();
-        List<DiscordEmoji> discordEmojis = context.getDiscordEmojis();
+        Context context;
+        if (getMode() == Mode.PARTITIONED) {
+            context = contextManager.getContext(guild);
+        } else {
+            context = contextManager.getContext();
+        }
+
+        List<Emoji> emojis = (List<Emoji>) context.getInstancesOf(Emoji.class, DiscordEmoji.class);
+        List<DiscordEmoji> discordEmojis = context.getInstancesOf(DiscordEmoji.class);
         //if the output exceeds 2000 characters separate into several messages
         List<String> outputParts = Lists.newArrayList();
         outputParts.add("");
@@ -183,6 +229,30 @@ public class DiscordListener extends ListenerAdapter {
         String query = msg.substring(msg.indexOf("\"") + 1, msg.lastIndexOf("\""));
 
         commandHandler.searchQuery(query, message.getChannel());
+    }
+
+    private void setMode(Mode mode) {
+        this.mode = mode;
+    }
+
+    private Mode getMode() {
+        return mode;
+    }
+
+    public enum Mode {
+        /**
+         * all guilds share the same {@link Context} meaning all emojis will be available across all guilds
+         *
+         * Recommended if you want to be able to use guild emotes on other guilds
+         */
+        SHARED,
+
+        /**
+         * there will be a separate {@link Context.BindableContext} for each guild meaning the emojis will be separated
+         *
+         * Recommended if one emojibot instance is shared by completely different guilds
+         */
+        PARTITIONED
     }
 
 }

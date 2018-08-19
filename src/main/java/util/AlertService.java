@@ -1,14 +1,13 @@
 package util;
 
-import api.StringList;
-import api.StringListImpl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.User;
+import net.robinfriedli.stringlist.StringList;
+import net.robinfriedli.stringlist.StringListImpl;
 
 import javax.annotation.Nullable;
-
 import java.util.Arrays;
 import java.util.List;
 

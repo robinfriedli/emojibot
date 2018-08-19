@@ -1,39 +1,54 @@
 package api;
 
 import com.google.common.collect.Lists;
+import core.AbstractXmlElement;
+import core.Context;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class Keyword {
+public class Keyword extends AbstractXmlElement {
 
-    private String keywordValue;
-    private boolean replace;
+    public Keyword(String keywordValue, boolean replace, Context context) {
+        this(keywordValue, replace, State.CONCEPTION, context);
+    }
 
-    public Keyword(String keywordValue, boolean replace) {
-        this.keywordValue = keywordValue;
-        this.replace = replace;
+    public Keyword(String keywordValue, boolean replace, State state, Context context) {
+        super("keyword", buildAttributes(replace), keywordValue, state, context);
+    }
+
+    private static Map<String, String> buildAttributes(boolean replace) {
+        Map<String, String> attributeMap = new HashMap<>();
+        attributeMap.put("replace", Boolean.toString(replace));
+        return attributeMap;
+    }
+
+    @Override
+    public String getId() {
+        return getTextContent();
     }
 
     public String getKeywordValue() {
-        return keywordValue;
+        return getTextContent();
     }
 
     public void setKeywordValue(String keyword) {
-        this.keywordValue = keyword;
+        setTextContent(keyword);
     }
 
     public boolean isReplace() {
-        return replace;
+        return Boolean.parseBoolean(getAttribute("replace").getValue());
     }
 
     public void setReplace(boolean replace) {
-        this.replace = replace;
+        setAttribute("replace", Boolean.toString(replace));
     }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Keyword)) return false;
-        return keywordValue.equals(((Keyword) o).getKeywordValue())
+        return this.getKeywordValue().equals(((Keyword) o).getKeywordValue())
             && isReplace() == ((Keyword) o).isReplace();
     }
 

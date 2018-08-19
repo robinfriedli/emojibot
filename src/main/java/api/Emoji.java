@@ -1,47 +1,61 @@
 package api;
 
 import com.google.common.collect.Lists;
+import core.AbstractXmlElement;
 import core.Context;
-import core.DuplicateKeywordEvent;
-import core.EmojiChangingEvent;
 import util.DiscordListener;
 
+import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
+public class Emoji extends AbstractXmlElement {
 
-public class Emoji {
-
-    private List<Keyword> keywords;
-    private String emojiValue;
-    private boolean random;
-    private State state;
-
-    public Emoji(List<Keyword> keywords, String emojiValue, boolean random) {
-        this.keywords = keywords;
-        this.emojiValue = emojiValue;
-        this.random = random;
-        this.state = State.CONCEPTION;
+    public Emoji(List<Keyword> keywords, String emojiValue, boolean random, Context context) {
+        this(keywords, emojiValue, random, State.CONCEPTION, "emoji", context);
     }
 
-    public Emoji(List<Keyword> keywords, String emojiValue, boolean random, State state) {
-        this.keywords = keywords;
-        this.emojiValue = emojiValue;
-        this.random = random;
-        this.state = state;
+    public Emoji(List<Keyword> keywords, String emojiValue, boolean random, State state, Context context) {
+        this(keywords, emojiValue, random, state, "emoji", context);
+    }
+
+    public Emoji(List<Keyword> keywords, Map<String, String> attributeMap, String tagName, Context context) {
+        super(tagName, attributeMap, Lists.newArrayList(keywords), context);
+    }
+
+    public Emoji(List<Keyword> keywords, Map<String, String> attributeMap, String tagName, State state, Context context) {
+        super(tagName, attributeMap, Lists.newArrayList(keywords), state, context);
+    }
+
+    public Emoji(List<Keyword> keywords, String emojiValue, boolean random, State state, String tagName, Context context) {
+        super(tagName, buildAttributes(emojiValue, random), Lists.newArrayList(keywords), state, context);
+    }
+
+    static Map<String, String> buildAttributes(String emojiValue, boolean random) {
+        Map<String, String> attributeMap = new HashMap<>();
+        attributeMap.put("value", emojiValue);
+        attributeMap.put("random", Boolean.toString(random));
+        return attributeMap;
+    }
+
+    @Override
+    public String getId() {
+        return getEmojiValue();
     }
 
     public List<Keyword> getKeywords() {
-        return keywords;
+        return getSubElementsWithType(Keyword.class);
     }
 
     public boolean hasKeyword(Keyword keyword) {
-        return keywords.contains(keyword);
+        return getSubElements().contains(keyword);
     }
 
     public boolean hasKeywordValue(String keyword) {
-        List<String> keywords = this.keywords.stream().map(Keyword::getKeywordValue).collect(Collectors.toList());
+        List<String> keywords = getKeywords().stream().map(Keyword::getKeywordValue).collect(Collectors.toList());
         return keywords.contains(keyword);
     }
 
@@ -52,7 +66,7 @@ public class Emoji {
 
     public Keyword getKeyword(String value, boolean ignoreCase) {
         if (hasKeywordValue(value)) {
-            List<Keyword> foundKeywords = keywords.stream()
+            List<Keyword> foundKeywords = getKeywords().stream()
                 .filter(k -> ignoreCase
                     ? k.getKeywordValue().equalsIgnoreCase(value)
                     : k.getKeywordValue().equals(value))
@@ -72,7 +86,8 @@ public class Emoji {
         Keyword keyword = getKeyword(value);
 
         if (keyword == null) {
-            throw new IllegalStateException("Keyword value " + value + " not found on emoji " + emojiValue);
+            throw new IllegalStateException("Keyword value " + value + " not found on emoji "
+                + getAttribute("value").getValue());
         }
 
         return keyword;
@@ -82,50 +97,47 @@ public class Emoji {
         Keyword keyword = getKeyword(value, true);
 
         if (keyword == null) {
-            throw new IllegalStateException("Keyword value " + value + " not found on emoji " + emojiValue);
+            throw new IllegalStateException("Keyword value " + value + " not found on emoji "
+                + getAttribute("value").getValue());
         }
 
         return keyword;
     }
 
     public List<Keyword> getDuplicatesOf(Keyword keyword) {
-        return this.keywords.stream().filter(k -> k.getKeywordValue().equals(keyword.getKeywordValue())).collect(Collectors.toList());
-    }
-
-    public void setKeywords(List<Keyword> keywords) {
-        this.keywords = keywords;
+        return getKeywords().stream().filter(k -> k.getKeywordValue().equals(keyword.getKeywordValue())).collect(Collectors.toList());
     }
 
     public void addKeyword(Keyword keyword) {
-        this.keywords.add(keyword);
+        this.addSubElement(keyword);
     }
 
-    public boolean removeKeyword(Keyword keyword) {
-        return keywords.remove(keyword);
+    public void removeKeyword(Keyword keyword) {
+         removeSubElement(keyword);
+    }
+
+    public void removeKeywords(List<Keyword> keywords) {
+        removeSubElements(Lists.newArrayList(keywords));
+    }
+
+    public void removeKeywords(Keyword... keywords) {
+        removeKeywords(Arrays.asList(keywords));
     }
 
     public String getEmojiValue() {
-        return emojiValue;
+        return getAttribute("value").getValue();
     }
 
     public void setEmojiValue(String emoji) {
-        this.emojiValue = emoji;
+        setAttribute("value", emoji);
     }
 
     public boolean isRandom() {
-        return this.random;
+        return Boolean.parseBoolean(getAttribute("random").getValue());
     }
 
     public void setRandom(boolean random) {
-        this.random = random;
-    }
-
-    public State getState() {
-        return this.state;
-    }
-
-    public void setState(State state) {
-        this.state = state;
+        setAttribute("random", Boolean.toString(random));
     }
 
     public static List<Keyword> getAllKeywords(List<? extends Emoji> emojis) {
@@ -167,12 +179,12 @@ public class Emoji {
             throw new IllegalStateException("No emoji found for value: " + value + " within provided list");
         }
     }
-
+/*
     public enum State {
 
         /**
          * Emoji has been created but not yet persisted
-         */
+         *//*
         CONCEPTION {
             @Override
             public void addChanges(EmojiChangingEvent emojiChangingEvent, Context context) {
@@ -192,7 +204,7 @@ public class Emoji {
 
         /**
          * Emoji exists in XML file and was left unchanged
-         */
+         *//*
         CLEAN {
             @Override
             public void addChanges(EmojiChangingEvent emojiChangingEvent, Context context) {
@@ -212,7 +224,7 @@ public class Emoji {
 
         /**
          * Emoji exists in XML but has uncommitted changes
-         */
+         *//*
         TOUCHED {
             private List<EmojiChangingEvent> changes = Lists.newArrayList();
 
@@ -222,12 +234,12 @@ public class Emoji {
                 Emoji source = emojiChangingEvent.getSource();
 
                 if (emojiChangingEvent instanceof DuplicateKeywordEvent) {
-                    context.executePersistTask(false, persistenceManager -> {
+                    context.invoke(false, persistenceManager -> {
                         persistenceManager.applyDuplicateKeywordEvent((DuplicateKeywordEvent) emojiChangingEvent);
                         return null;
                     });
                 } else {
-                    context.executePersistTask(false, persistenceManager -> {
+                    context.invoke(false, persistenceManager -> {
                             persistenceManager.applyEmojiChanges(source, emojiChangingEvent);
                             return null;
                         }
@@ -256,7 +268,7 @@ public class Emoji {
 
         /**
          * Emoji is being deleted but still exists in XML file
-         */
+         *//*
         DELETION {
             @Override
             public void addChanges(EmojiChangingEvent emojiChangingEvent, Context context) {
@@ -281,5 +293,5 @@ public class Emoji {
         public abstract void clearChanges(Emoji source);
 
     }
-
+**/
 }

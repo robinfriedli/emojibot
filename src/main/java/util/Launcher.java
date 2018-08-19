@@ -1,22 +1,23 @@
 package util;
 
-import java.util.List;
-import java.util.Scanner;
-
 import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
-import core.Context;
-import core.XmlManager;
+import com.google.common.collect.Lists;
+import core.ContextManager;
+import core.PersistenceManager;
+
+import java.util.List;
+import java.util.Scanner;
 
 public class Launcher {
 
-    private static Context context = new Context();
-    private static CommandHandler commandHandler = new CommandHandler(context);
+    private static ContextManager contextManager = new ContextManager(
+        "./resources/emojis.xml", new PersistenceManager(), Lists.newArrayList(new AlertEventListener(new AlertService())));
+    private static CommandHandler commandHandler = new CommandHandler(contextManager.getContext());
 
     public static void main(String[] args) {
-        XmlManager xmlManager = new XmlManager();
-        if (xmlManager.getDocument() != null) {
+        if (contextManager.getContext().getPersistenceManager().getXmlPersister().getDocument() != null) {
             showMenu();
         } else {
             throw new IllegalStateException("Emoji loading failed");
@@ -68,8 +69,25 @@ public class Launcher {
 
     private static void launchDiscordBot() {
         commandHandler.cleanXml(null);
-        DiscordListener discordListener = new DiscordListener(context, commandHandler);
-        discordListener.launch();
+        DiscordListener discordListener = new DiscordListener(contextManager, commandHandler);
+
+        System.out.println("Select Mode:");
+        System.out.println("1 - SHARED (all guilds will share the same emojis, recommended if you want to share guild emotes)");
+        System.out.println("2 - PARTITIONED (guilds will be completely separated, recommended if one emojibot instance " +
+            "is shared between guilds that don't have anything to do with each other)");
+        Scanner sc = new Scanner(System.in);
+        String input = sc.nextLine();
+
+        switch (input) {
+            case "1":
+                discordListener.launch(DiscordListener.Mode.SHARED);
+                break;
+            case "2":
+                discordListener.launch(DiscordListener.Mode.PARTITIONED);
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
     }
 
     private static void transformText() {
@@ -110,8 +128,8 @@ public class Launcher {
     }
 
     private static void listEmojis() {
-        List<Emoji> emojis = context.getUnicodeEmojis();
-        List<DiscordEmoji> discordEmojis = context.getDiscordEmojis();
+        List<Emoji> emojis = contextManager.getContext().getInstancesOf(Emoji.class, DiscordEmoji.class);
+        List<DiscordEmoji> discordEmojis = contextManager.getContext().getInstancesOf(DiscordEmoji.class);
         StringBuilder builder = new StringBuilder();
 
         for (Emoji emoji : emojis) {

@@ -1,17 +1,5 @@
 package core;
 
-import java.io.File;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
 import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
@@ -21,6 +9,17 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import util.DiscordListener;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
+@Deprecated // replaced by XmlPersister in new Persistence API
 public class XmlManager {
 
     private Document doc = getDocument();
@@ -132,7 +131,7 @@ public class XmlManager {
                 .forEach(emojiElem::removeChild);
         }
     }
-
+/*
     public <E extends Emoji> void adjustKeywords(E emoji, List<KeywordChangingEvent> changedKeywords) {
         String tagName = emoji instanceof DiscordEmoji ? "discord-emoji" : "emoji";
         Element emojiElem = requireEmojiElem(tagName, emoji.getEmojiValue());
@@ -153,7 +152,7 @@ public class XmlManager {
             }
         }
     }
-
+*/
     public List<Element> getEmojiElems() {
         return nodeListToElementList(doc.getElementsByTagName("emoji"));
     }
