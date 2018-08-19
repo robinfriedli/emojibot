@@ -6,6 +6,8 @@ import api.Keyword;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import net.robinfriedli.jxp.api.XmlElement;
+import net.robinfriedli.jxp.persist.DefaultPersistenceManager;
 import org.w3c.dom.Element;
 import util.DiscordListener;
 

@@ -4,8 +4,6 @@ import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
 import com.google.common.collect.Lists;
-import core.Context;
-import core.ContextManager;
 import core.PersistenceManager;
 import core.TextLoadingService;
 import net.dv8tion.jda.core.AccountType;
@@ -18,6 +16,8 @@ import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.robinfriedli.jxp.persist.Context;
+import net.robinfriedli.jxp.persist.ContextManager;
 
 import javax.security.auth.login.LoginException;
 import java.util.List;

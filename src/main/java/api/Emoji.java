@@ -1,8 +1,8 @@
 package api;
 
 import com.google.common.collect.Lists;
-import core.AbstractXmlElement;
-import core.Context;
+import net.robinfriedli.jxp.api.AbstractXmlElement;
+import net.robinfriedli.jxp.persist.Context;
 import util.DiscordListener;
 
 import javax.annotation.Nullable;

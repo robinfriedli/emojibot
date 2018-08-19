@@ -4,8 +4,8 @@ import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
 import com.google.common.collect.Lists;
-import core.ContextManager;
 import core.PersistenceManager;
+import net.robinfriedli.jxp.persist.ContextManager;
 
 import java.util.List;
 import java.util.Scanner;

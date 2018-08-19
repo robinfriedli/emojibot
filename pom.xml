@@ -43,6 +43,11 @@
       <artifactId>StringList</artifactId>
       <version>1.0</version>
     </dependency>
+    <dependency>
+      <groupId>net.robinfriedli.JXP</groupId>
+      <artifactId>JXP</artifactId>
+      <version>0.1</version>
+    </dependency>
   </dependencies>
 
   <repositories>
@@ -54,6 +59,10 @@
     <repository>
       <id>StringList</id>
       <url>https://raw.github.com/robinfriedli/StringList/repository/</url>
+    </repository>
+    <repository>
+      <id>JXP</id>
+      <url>https://raw.github.com/robinfriedli/JXP/raw/repository/</url>
     </repository>
   </repositories>
 

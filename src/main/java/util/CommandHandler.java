@@ -4,9 +4,13 @@ import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
 import com.google.common.collect.*;
-import core.*;
+import core.PersistenceManager;
+import core.SettingsLoader;
+import core.TextManipulationService;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.robinfriedli.jxp.api.XmlElement;
+import net.robinfriedli.jxp.persist.Context;
 import net.robinfriedli.stringlist.StringList;
 import net.robinfriedli.stringlist.StringListImpl;
 
