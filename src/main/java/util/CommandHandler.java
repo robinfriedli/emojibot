@@ -222,7 +222,9 @@ public class CommandHandler {
                             if (existingEmoji != null) {
                                 for (int j = 0; j < keywordList.length; j++) {
                                     String keyword = keywordList[j];
-                                    boolean replace = Boolean.parseBoolean(replaceTagList[j]);
+                                    boolean replace = replaceTagList.length > 1
+                                            ? Boolean.parseBoolean(replaceTagList[j])
+                                            : Boolean.parseBoolean(replaceTagList[0]);
                                     if (!existingEmoji.hasKeywordValue(keyword)) {
                                         existingEmoji.addSubElement(new Keyword(keyword, replace, context));
                                     } else if (existingEmoji.getKeyword(keyword).isReplace() != replace) {
@@ -236,7 +238,10 @@ public class CommandHandler {
                             } else {
                                 List<Keyword> keywords = Lists.newArrayList();
                                 for (int j = 0; j < keywordList.length; j++) {
-                                    keywords.add(new Keyword(keywordList[j], Boolean.parseBoolean(replaceTagList[j]), context));
+                                    boolean replace = replaceTagList.length > 1
+                                            ? Boolean.parseBoolean(replaceTagList[j])
+                                            : Boolean.parseBoolean(replaceTagList[0]);
+                                    keywords.add(new Keyword(keywordList[j], replace, context));
                                 }
                                 new DiscordEmoji(
                                         Lists.newArrayList(keywords),
@@ -253,7 +258,9 @@ public class CommandHandler {
                             if (existingEmoji != null) {
                                 for (int j = 0; j < keywordList.length; j++) {
                                     String keyword = keywordList[j];
-                                    boolean replace = Boolean.parseBoolean(replaceTagList[j]);
+                                    boolean replace = replaceTagList.length > 1
+                                            ? Boolean.parseBoolean(replaceTagList[j])
+                                            : Boolean.parseBoolean(replaceTagList[0]);
                                     if (!existingEmoji.hasKeywordValue(keyword)) {
                                         existingEmoji.addSubElement(new Keyword(keyword, replace, context));
                                     } else if (existingEmoji.getKeyword(keyword).isReplace() != replace) {
@@ -267,7 +274,10 @@ public class CommandHandler {
                             } else {
                                 List<Keyword> keywords = Lists.newArrayList();
                                 for (int j = 0; j < keywordList.length; j++) {
-                                    keywords.add(new Keyword(keywordList[j], Boolean.parseBoolean(replaceTagList[j]), context));
+                                    boolean replace = replaceTagList.length > 1
+                                            ? Boolean.parseBoolean(replaceTagList[j])
+                                            : Boolean.parseBoolean(replaceTagList[0]);
+                                    keywords.add(new Keyword(keywordList[j], replace, context));
                                 }
                                 new Emoji(Lists.newArrayList(keywords), emoji, random, context);
                             }
