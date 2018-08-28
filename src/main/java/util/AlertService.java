@@ -201,7 +201,7 @@ public class AlertService {
                 //check that paragraph is not an empty line
                 if (notEmpty(paragraph)) {
                     if (i < paragraphs.size() - 1) paragraph = paragraph + System.lineSeparator();
-                    outputParts.add(paragraph);
+                    outputParts = fillParts(outputParts, paragraph);
                 }
             } else {
                 //if the paragraph is too long separate into sentences
