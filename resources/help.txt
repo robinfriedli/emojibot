@@ -1,24 +1,24 @@
-Transform text into emojitext: 'e!e text' or 'e!e -arg1 -arg2 "text"'
+- Transform text into emojitext: 'e!e text' or 'e!e -arg1 -arg2 "text"'
 
     Notice:
     arguments set property to the opposite of what's in the settings
     args: -rf (random formatting), -re (random emojis), -rb (replace b with 🅱️)
     -rw (replace keyword if part of word)
 
-Whisper to users: 'e!whisper -arg1 -arg2 @user1 "text @user2 text"'
+- Whisper to users: 'e!whisper -arg1 -arg2 @user1 "text @user2 text"'
 
-List all saved emojis: e!list
+- List all saved emojis: e!list
 
-Search for saved emojis and keywords: e!search "searchTerm"
+- Search for saved emojis and keywords: e!search "searchTerm"
 
-Add emojis: e!add "emoji1, emoji2" or e!add "emoji1, emoji2" "false, true"
+- Add emojis: e!add "emoji1, emoji2" or e!add "emoji1, emoji2" "false, true"
 
     Notice:
     The optional random flags at the end define whether the specified emoji
     will randomly be placed between words.
     Default value is 'true'.
 
-Add emojis with keywords or adjust replace flag of existing keywords:
+- Add emojis with keywords or adjust replace flag of existing keywords:
 
     Syntax:
     e!add "emoji1, emoji2" "keyword1, keyword2" "true, false"
@@ -30,21 +30,19 @@ Add emojis with keywords or adjust replace flag of existing keywords:
     The mandatory second set of flags defines whether the keywords gets replaced (true) or
     the emoji gets placed after the keyword (false)
 
-Remove emojis: e!rm "emoji1, emoji2"
+- Remove emojis: e!rm "emoji1, emoji2"
 
-Remove keywords: e!rm "emoji1, emoji2" "keyword1, keyword2"
-
-Merge duplicate emojis and duplicate keywords on the same emoji: e!clean
-
-    Notice: emojis and keywords can only duplicate if manually meddling with the xml file,
-    the bot does not duplicate anything
-    when merging keywords the replace flag is set to true if all keywords are true
+- Remove keywords: e!rm "emoji1, emoji2" "keyword1, keyword2"
 
 Settings:
 
     e!settings: show all settings
     e!settings "REPLACE_B": show value of property
     e!settings "REPLACE_B" "true": adjust value of property
+
+Notice: use argument -noCommit with e!add and e!rm to make temporary changes that
+can easily all be reverted or saved with e!revert / e!commit. Note that all pending temporary
+changes will be saved when making a change without the -noCommit argument.
 
 To copy paste emojis see https://emojipedia.org
 

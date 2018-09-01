@@ -94,6 +94,12 @@ ________________________________________________________________________________
     `e!settings "REPLACE_B"`: show value of property
     `e!settings "REPLACE_B" "true"`: adjust value of property
 
+### Note:
+
+Use argument -noCommit with e!add and e!rm to make temporary changes that
+can easily all be reverted or saved with e!revert / e!commit. Note that all pending temporary
+changes will be saved when making a change without the -noCommit argument.
+
 ____________________________________________________________________________________________________________________
 
 ## Setup:

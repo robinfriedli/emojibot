@@ -33,6 +33,8 @@ public class DiscordListener extends ListenerAdapter {
     public static final String COMMAND_SEARCH = "e!search";
     public static final String COMMAND_CLEAN = "e!clean";
     public static final String COMMAND_SETTINGS = "e!settings";
+    public static final String COMMAND_COMMIT = "e!commit";
+    public static final String COMMAND_REVERT = "e!revert";
 
     private final ContextManager contextManager;
     private final CommandHandler commandHandler;
@@ -91,11 +93,11 @@ public class DiscordListener extends ListenerAdapter {
                 }
 
                 if (msg.startsWith(COMMAND_ADD)) {
-                    commandHandler.saveEmojis(msg, message.getChannel(), event.getGuild());
+                    commandHandler.saveEmojis(msg.substring(COMMAND_ADD.length() + 1), message.getChannel(), event.getGuild());
                 }
 
                 if (msg.startsWith(COMMAND_RM)) {
-                    commandHandler.deleteEmojis(msg, message.getChannel(), event.getGuild());
+                    commandHandler.deleteEmojis(msg.substring(COMMAND_RM.length() + 1), message.getChannel(), event.getGuild());
                 }
 
                 //displays help.txt file
@@ -120,16 +122,26 @@ public class DiscordListener extends ListenerAdapter {
                     commandHandler.handleSettings(msg, message.getChannel());
                 }
 
-                if (msg.equals("e!test")) {
-                    Context context = contextManager.getContext(guild);
-                    context.invoke(false, () -> {
-                        new Emoji(Lists.newArrayList(), "mine",true ,context);
+                if (msg.equals(COMMAND_COMMIT)) {
+                    Context context;
+                    if (mode == Mode.PARTITIONED) {
+                        context = contextManager.getContext(guild);
+                    } else {
+                        context = contextManager.getContext();
+                    }
 
-                        Emoji craft = context.invoke(false, () -> new Emoji(Lists.newArrayList(), "craft", true, context));
-                        System.out.println(craft.toString());
-
-                    });
                     context.commitAll();
+                }
+
+                if (msg.equals(COMMAND_REVERT)) {
+                    Context context;
+                    if (mode == Mode.PARTITIONED) {
+                        context = contextManager.getContext(guild);
+                    } else {
+                        context = contextManager.getContext();
+                    }
+
+                    context.revertAll();
                 }
             } catch (IllegalArgumentException | IllegalStateException | UnsupportedOperationException | AssertionError e) {
                 e.printStackTrace();
@@ -226,9 +238,12 @@ public class DiscordListener extends ListenerAdapter {
     }
 
     private void searchQuery(Message message, String msg) {
-        String query = msg.substring(msg.indexOf("\"") + 1, msg.lastIndexOf("\""));
-
-        commandHandler.searchQuery(query, message.getChannel());
+        try {
+            String query = msg.substring(msg.indexOf("\"") + 1, msg.lastIndexOf("\""));
+            commandHandler.searchQuery(query, message.getChannel());
+        } catch (StringIndexOutOfBoundsException e) {
+            message.getChannel().sendMessage("Invalid input. See " + COMMAND_HELP).queue();
+        }
     }
 
     private void setMode(Mode mode) {

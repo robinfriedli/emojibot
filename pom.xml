@@ -41,7 +41,7 @@
     <dependency>
       <groupId>net.robinfriedli.StringList</groupId>
       <artifactId>StringList</artifactId>
-      <version>1.0</version>
+      <version>1.1</version>
     </dependency>
     <dependency>
       <groupId>net.robinfriedli.JXP</groupId>
