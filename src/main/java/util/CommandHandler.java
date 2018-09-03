@@ -161,8 +161,8 @@ public class CommandHandler {
                 .applyForEach(String::trim));
 
             StringList keywordValues = StringListImpl
-                .createWords(command.substring(quotations.get(keywordsIndex) + 1, quotations.get(keywordsIndex + 1)))
-                .filterWords();
+                .create(command.substring(quotations.get(keywordsIndex) + 1, quotations.get(keywordsIndex + 1)), ",")
+                .applyForEach(String::trim);
 
             StringList replaceTags = StringListImpl
                 .createWords(command.substring(quotations.get(replaceTagsIndex) + 1, quotations.get(replaceTagsIndex + 1)))
@@ -310,8 +310,8 @@ public class CommandHandler {
                 .create(command.substring(quotations.get(0) + 1, quotations.get(1)), ",")
                 .applyForEach(String::trim));
             StringList keywordList = StringListImpl
-                .createWords(command.substring(quotations.get(2) + 1, quotations.get(3)))
-                .filterWords();
+                .create(command.substring(quotations.get(2) + 1, quotations.get(3)), ",")
+                .applyForEach(String::trim);
 
             if (guild != null) {
                 for (int i = 0; i < emojiList.size(); i++) {

@@ -57,13 +57,13 @@ public class PersistenceManager extends DefaultPersistenceManager {
                         ((DiscordEmoji) duplicateEmoji).getGuildId(),
                         ((DiscordEmoji) duplicateEmoji).getGuildName(),
                         getContext()
-                );
+                ).persist();
             } else if (duplicates.stream().noneMatch(e -> e instanceof DiscordEmoji)) {
                 duplicates.forEach(e -> e.setState(XmlElement.State.DELETION));
                 getContext().removeElements(Lists.newArrayList(duplicates));
                 List<Element> duplicateElems = getXmlPersister().find("emoji", "value", duplicateEmoji.getEmojiValue());
                 duplicateElems.forEach(elem -> elem.getParentNode().removeChild(elem));
-                new Emoji(keywords, duplicateEmoji.getEmojiValue(), random, getContext());
+                new Emoji(keywords, duplicateEmoji.getEmojiValue(), random, getContext()).persist();
             } else {
                 throw new IllegalStateException("Not all duplicates of " + duplicateEmoji.getEmojiValue()
                         + " are of the same type. Merging failed.");
