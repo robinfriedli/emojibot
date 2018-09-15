@@ -1,7 +1,5 @@
 package util;
 
-import java.util.List;
-
 import api.Emoji;
 import api.Keyword;
 import com.google.common.collect.HashMultimap;
@@ -10,13 +8,14 @@ import com.google.common.collect.Multimap;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.robinfriedli.jxp.api.XmlElement;
 import net.robinfriedli.jxp.events.ElementChangingEvent;
-import net.robinfriedli.jxp.events.ElementCreatedEvent;
-import net.robinfriedli.jxp.events.ElementDeletingEvent;
-import net.robinfriedli.jxp.events.Event;
 import net.robinfriedli.jxp.events.EventListener;
 import net.robinfriedli.jxp.persist.Context;
+import net.robinfriedli.jxp.persist.Transaction;
 import net.robinfriedli.stringlist.StringList;
 import net.robinfriedli.stringlist.StringListImpl;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class AlertEventListener extends EventListener {
 
@@ -27,23 +26,18 @@ public class AlertEventListener extends EventListener {
     }
 
     @Override
-    public void transactionApplied(List<Event> events, Context context) {
-        List<Emoji> createdEmojis = Lists.newArrayList();
-        List<Emoji> deletedEmojis = Lists.newArrayList();
+    public void transactionApplied(Transaction tx) {
+        Context context = tx.getContext();
+        List<Emoji> createdEmojis = tx.getCreatedElements().stream().map(e -> (Emoji) e.getSource()).collect(Collectors.toList());
+        List<Emoji> deletedEmojis = tx.getDeletedElements().stream().map(e -> (Emoji) e.getSource()).collect(Collectors.toList());
         Multimap<Emoji, ElementChangingEvent> changedEmojis = HashMultimap.create();
         List<ElementChangingEvent> changedKeywords = Lists.newArrayList();
 
-        for (Event event : events) {
-            if (event instanceof ElementCreatedEvent) {
-                createdEmojis.add((Emoji) event.getSource());
-            } else if (event instanceof ElementDeletingEvent) {
-                deletedEmojis.add((Emoji) event.getSource());
-            } else if (event instanceof ElementChangingEvent) {
-                if (event.getSource() instanceof Emoji) {
-                    changedEmojis.put((Emoji) event.getSource(), (ElementChangingEvent) event);
-                } else if (event.getSource() instanceof Keyword) {
-                    changedKeywords.add((ElementChangingEvent) event);
-                }
+        for (ElementChangingEvent change : tx.getElementChanges()) {
+            if (change.getSource() instanceof Emoji) {
+                changedEmojis.put((Emoji) change.getSource(), change);
+            } else if (change.getSource() instanceof Keyword) {
+                changedKeywords.add(change);
             }
         }
 
