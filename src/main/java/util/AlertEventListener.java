@@ -59,7 +59,7 @@ public class AlertEventListener extends EventListener {
             for (ElementChangingEvent changedKeyword : changedKeywords) {
                 Keyword keyword = (Keyword) changedKeyword.getSource();
                 if (changedKeyword.attributeChanged("replace")) {
-                    String replace = changedKeyword.getAttributeChange("replace").getNewValue().getValue();
+                    String replace = changedKeyword.getAttributeChange("replace").getNewValue();
                     String emojiValue = ((Emoji) keyword.getParent()).getEmojiValue();
                     responseBuilder.append("Replace set to ").append(replace)
                         .append(" for Keyword ").append(keyword.getKeywordValue()).append(" on Emoji ").append(emojiValue)
@@ -87,7 +87,7 @@ public class AlertEventListener extends EventListener {
             for (ElementChangingEvent changedEmoji : changedEmojis.get(emoji)) {
                 if (changedEmoji.attributeChanged("random")) {
                     responseBuilder.append("\trandom flag changed to ")
-                        .append(changedEmoji.getAttributeChange("random").getNewValue().getValue())
+                        .append(changedEmoji.getAttributeChange("random").getNewValue())
                         .append(System.lineSeparator());
                 }
 
