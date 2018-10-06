@@ -250,7 +250,7 @@ public class CommandHandler {
             context.commitAll();
         }
 
-        context.invoke(commit, () -> {
+        context.invoke(commit, false, () -> {
             for (EmojiBuilder builder : builders.keySet()) {
                 Boolean isDiscordEmoji = builders.get(builder);
                 if (isDiscordEmoji) {
@@ -295,7 +295,7 @@ public class CommandHandler {
                 context.commitAll();
             }
 
-            context.invoke(commit, () -> {
+            context.invoke(commit, false, () -> {
                 for (String emoji : emojiList) {
                     XmlElement foundEmoji = context.getElement(emoji);
                     if (foundEmoji != null) {
@@ -327,7 +327,7 @@ public class CommandHandler {
                 context.commitAll();
             }
 
-            context.invoke(commit, () -> {
+            context.invoke(commit, false, () -> {
                 for (String emoji : emojiList) {
                     XmlElement foundEmoji = context.getElement(emoji);
                     if (foundEmoji != null) {
@@ -480,7 +480,7 @@ public class CommandHandler {
             alertService.send("No configuration errors found.", channel);
         } else {
             if (!duplicateEmojis.isEmpty()) {
-                context.invoke(true, () -> {
+                context.invoke(true, false, () -> {
                     PersistenceManager persistenceManager = (PersistenceManager) context.getPersistenceManager();
                     persistenceManager.mergeDuplicateEmojis(duplicateEmojis);
                 }, channel);
@@ -493,7 +493,7 @@ public class CommandHandler {
             if (!duplicateKeywords.isEmpty()) {
                 // variables used in lambda must be final
                 Multimap<Emoji, Keyword> finalDuplicateKeywords = duplicateKeywords;
-                context.invoke(true, () -> {
+                context.invoke(true, false, () -> {
                     PersistenceManager persistenceManager = (PersistenceManager) context.getPersistenceManager();
                     persistenceManager.mergeDuplicateKeywords(finalDuplicateKeywords);
                 }, channel);
@@ -502,7 +502,7 @@ public class CommandHandler {
             if (!upperCaseKeywords.isEmpty()) {
                 // variables used in lambda must be final
                 Multimap<Emoji, Keyword> finalUpperCaseKeywords = upperCaseKeywords;
-                context.invoke(true, () -> {
+                context.invoke(true, false, () -> {
                     PersistenceManager persistenceManager = (PersistenceManager) context.getPersistenceManager();
                     persistenceManager.handleUpperCaseKeywords(finalUpperCaseKeywords);
                 }, channel);
@@ -514,7 +514,7 @@ public class CommandHandler {
             if (!duplicateKeywords.isEmpty()) {
                 // variables used in lambda must be final
                 Multimap<Emoji, Keyword> finalDuplicateKeywords = duplicateKeywords;
-                context.invoke(true, () -> {
+                context.invoke(true, false, () -> {
                     PersistenceManager persistenceManager = (PersistenceManager) context.getPersistenceManager();
                     persistenceManager.mergeDuplicateKeywords(finalDuplicateKeywords);
                 }, channel);
