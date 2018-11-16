@@ -9,6 +9,8 @@ import com.google.common.collect.Multimap;
 import net.robinfriedli.jxp.api.XmlElement;
 import net.robinfriedli.jxp.persist.DefaultPersistenceManager;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import util.DiscordListener;
 
 import javax.annotation.Nullable;
@@ -25,8 +27,34 @@ public class PersistenceManager extends DefaultPersistenceManager {
 
     @Override
     public List<XmlElement> getAllElements() {
-        Iterable<Emoji> concatList = Iterables.concat(getUnicodeEmojis(), getDiscordEmojis());
-        return Lists.newArrayList(concatList);
+        List<XmlElement> emojis = Lists.newArrayList();
+        List<Element> emojiElems = getXmlPersister().getElements("emoji");
+        List<Element> discordEmojiElems = getXmlPersister().getElements("discord-emoji");
+
+        for (Element emojiElem : emojiElems) {
+            emojis.add(new Emoji(emojiElem, getKeywords(emojiElem), getContext()));
+        }
+
+        for (Element discordEmojiElem : discordEmojiElems) {
+            emojis.add(new DiscordEmoji(discordEmojiElem, getKeywords(discordEmojiElem), getContext()));
+        }
+
+        return emojis;
+    }
+
+    private List<XmlElement> getKeywords(Element emojiElem) {
+        List<XmlElement> keywords = Lists.newArrayList();
+        NodeList keywordElems = emojiElem.getElementsByTagName("keyword");
+
+        for (int i = 0; i < keywordElems.getLength(); i++) {
+            Node keywordElem = keywordElems.item(i);
+
+            if (keywordElem instanceof Element) {
+                keywords.add(new Keyword((Element) keywordElem, getContext()));
+            }
+        }
+
+        return keywords;
     }
 
     /**
@@ -40,15 +68,12 @@ public class PersistenceManager extends DefaultPersistenceManager {
             // get all Emoji instances with that value
             List<Emoji> duplicates = getAllEmojis(duplicateEmoji.getEmojiValue());
             // get all Keywords of all duplicates
-            List<Keyword> keywords = Emoji.getAllKeywords(duplicates);
+            List<XmlElement> keywords = Lists.newArrayList(Emoji.getAllKeywords(duplicates));
 
             // set random to true if any of the duplicates is true since it's the default value
             boolean random = duplicates.stream().anyMatch(Emoji::isRandom);
             if (duplicates.stream().allMatch(e -> e instanceof DiscordEmoji)) {
-                duplicates.forEach(e -> e.setState(XmlElement.State.DELETION));
-                getContext().removeElements(Lists.newArrayList(duplicates));
-                List<Element> duplicateElems = getXmlPersister().find("discord-emoji", "value", duplicateEmoji.getEmojiValue());
-                duplicateElems.forEach(elem -> elem.getParentNode().removeChild(elem));
+                duplicates.forEach(XmlElement::delete);
                 new DiscordEmoji(
                         keywords,
                         duplicateEmoji.getEmojiValue(),
@@ -59,10 +84,7 @@ public class PersistenceManager extends DefaultPersistenceManager {
                         getContext()
                 ).persist();
             } else if (duplicates.stream().noneMatch(e -> e instanceof DiscordEmoji)) {
-                duplicates.forEach(e -> e.setState(XmlElement.State.DELETION));
-                getContext().removeElements(Lists.newArrayList(duplicates));
-                List<Element> duplicateElems = getXmlPersister().find("emoji", "value", duplicateEmoji.getEmojiValue());
-                duplicateElems.forEach(elem -> elem.getParentNode().removeChild(elem));
+                duplicates.forEach(XmlElement::delete);
                 new Emoji(keywords, duplicateEmoji.getEmojiValue(), random, getContext()).persist();
             } else {
                 throw new IllegalStateException("Not all duplicates of " + duplicateEmoji.getEmojiValue()
@@ -84,9 +106,7 @@ public class PersistenceManager extends DefaultPersistenceManager {
                 List<Keyword> duplicates = emoji.getDuplicatesOf(keyword);
                 boolean replace = duplicates.stream().allMatch(Keyword::isReplace);
                 Keyword replacement = new Keyword(keyword.getKeywordValue(), replace, getContext());
-                getContext().apply(() -> emoji.removeKeywords(duplicates));
-                List<Element> duplicateElements = getXmlPersister().find("keyword", keyword.getTextContent(), emoji);
-                duplicateElements.forEach(elem -> elem.getParentNode().removeChild(elem));
+                emoji.removeKeywords(duplicates);
                 emoji.addKeyword(replacement);
             }
         }
@@ -114,51 +134,6 @@ public class PersistenceManager extends DefaultPersistenceManager {
         return getContext().getInstancesOf(Emoji.class).stream()
                 .filter(e -> e.getEmojiValue().equals(emojiValue))
                 .collect(Collectors.toList());
-    }
-
-    public List<Emoji> getUnicodeEmojis() {
-        List<Emoji> emojis = Lists.newArrayList();
-        List<Element> emojiElems = getXmlPersister().getElements("emoji");
-
-        for (Element emojiElem : emojiElems) {
-            String randomValue = emojiElem.getAttribute("random");
-            String emojiValue = emojiElem.getAttribute("value");
-            boolean random = randomValue.equals("") || Boolean.parseBoolean(randomValue);
-            emojis.add(new Emoji(getKeywords(emojiElem), emojiValue, random, Emoji.State.CLEAN, getContext()));
-        }
-
-        return emojis;
-    }
-
-    public List<DiscordEmoji> getDiscordEmojis() {
-        List<DiscordEmoji> discordEmojis = Lists.newArrayList();
-        List<Element> emojiElems = getXmlPersister().getElements("discord-emoji");
-
-        for (Element emojiElem : emojiElems) {
-            String value = emojiElem.getAttribute("value");
-            String randomValue = emojiElem.getAttribute("random");
-            String name = emojiElem.getAttribute("name");
-            String guildId = emojiElem.getAttribute("guildId");
-            String guildName = emojiElem.getAttribute("guildName");
-            boolean random = randomValue.equals("") || Boolean.parseBoolean(randomValue);
-
-            discordEmojis.add(new DiscordEmoji(getKeywords(emojiElem), value, random, Emoji.State.CLEAN, name, guildId, guildName, getContext()));
-        }
-
-        return discordEmojis;
-    }
-
-    private List<Keyword> getKeywords(Element emojiElem) {
-        List<Keyword> keywords = Lists.newArrayList();
-        List<Element> keywordElems = getXmlPersister().getChildren(emojiElem);
-
-        for (Element keywordElem : keywordElems) {
-            boolean replace = Boolean.parseBoolean(keywordElem.getAttribute("replace"));
-            String keywordValue = keywordElem.getTextContent();
-            keywords.add(new Keyword(keywordValue, replace, XmlElement.State.CLEAN, getContext()));
-        }
-
-        return keywords;
     }
 
     @Nullable

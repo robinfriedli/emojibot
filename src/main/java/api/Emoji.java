@@ -2,7 +2,9 @@ package api;
 
 import com.google.common.collect.Lists;
 import net.robinfriedli.jxp.api.AbstractXmlElement;
+import net.robinfriedli.jxp.api.XmlElement;
 import net.robinfriedli.jxp.persist.Context;
+import org.w3c.dom.Element;
 import util.DiscordListener;
 
 import javax.annotation.Nullable;
@@ -14,24 +16,20 @@ import java.util.stream.Collectors;
 
 public class Emoji extends AbstractXmlElement {
 
-    public Emoji(List<Keyword> keywords, String emojiValue, boolean random, Context context) {
-        this(keywords, emojiValue, random, State.CONCEPTION, "emoji", context);
+    public Emoji(List<XmlElement> keywords, String emojiValue, boolean random, Context context) {
+        this(keywords, buildAttributes(emojiValue, random), context);
     }
 
-    public Emoji(List<Keyword> keywords, String emojiValue, boolean random, State state, Context context) {
-        this(keywords, emojiValue, random, state, "emoji", context);
+    public Emoji(List<XmlElement> keywords, Map<String, String> attributes, Context context) {
+        super("emoji", attributes, keywords, context);
     }
 
-    public Emoji(List<Keyword> keywords, Map<String, String> attributeMap, String tagName, Context context) {
-        super(tagName, attributeMap, Lists.newArrayList(keywords), context);
+    public Emoji(String tagName, List<XmlElement> keywords, Map<String, String> attributes, Context context) {
+        super(tagName, attributes, keywords, context);
     }
 
-    public Emoji(List<Keyword> keywords, Map<String, String> attributeMap, String tagName, State state, Context context) {
-        super(tagName, attributeMap, Lists.newArrayList(keywords), state, context);
-    }
-
-    public Emoji(List<Keyword> keywords, String emojiValue, boolean random, State state, String tagName, Context context) {
-        super(tagName, buildAttributes(emojiValue, random), Lists.newArrayList(keywords), state, context);
+    public Emoji(Element element, List<XmlElement> keywords, Context context) {
+        super(element, keywords, context);
     }
 
     static Map<String, String> buildAttributes(String emojiValue, boolean random) {

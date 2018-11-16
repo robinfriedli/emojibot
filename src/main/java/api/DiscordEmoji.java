@@ -1,6 +1,8 @@
 package api;
 
+import net.robinfriedli.jxp.api.XmlElement;
 import net.robinfriedli.jxp.persist.Context;
+import org.w3c.dom.Element;
 
 import java.util.HashMap;
 import java.util.List;
@@ -9,25 +11,20 @@ import java.util.stream.Collectors;
 
 public class DiscordEmoji extends Emoji {
 
-    public DiscordEmoji(List<Keyword> keywords,
+    public DiscordEmoji(List<XmlElement> keywords,
                         String value,
                         boolean random,
                         String name,
                         String guildId,
                         String guildName,
                         Context context) {
-        this(keywords, value, random, State.CONCEPTION, name, guildId, guildName, context);
+        super("discord-emoji", keywords, buildAttributes(value, random, name, guildId, guildName), context);
     }
 
-    public DiscordEmoji(List<Keyword> keywords,
-                        String value,
-                        boolean random,
-                        State state,
-                        String name,
-                        String guildId,
-                        String guildName,
+    public DiscordEmoji(Element element,
+                        List<XmlElement> keywords,
                         Context context) {
-        super(keywords, buildAttributes(value, random, name, guildId, guildName), "discord-emoji", state, context);
+        super(element, keywords, context);
     }
 
     private static Map<String, String> buildAttributes(String value, boolean random, String name, String guildId, String guildName) {

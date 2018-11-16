@@ -4,6 +4,7 @@ import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
 import com.google.common.collect.Lists;
+import net.robinfriedli.jxp.api.XmlElement;
 import net.robinfriedli.jxp.persist.Context;
 
 import java.util.List;
@@ -70,7 +71,7 @@ public class EmojiBuilder {
         if (existingEmoji != null) {
             return castEmoji(existingEmoji, context);
         } else {
-            List<Keyword> keywords = Lists.newArrayList();
+            List<XmlElement> keywords = Lists.newArrayList();
             if (this.keywords != null && !this.keywords.isEmpty()) {
                 for (KeywordBuilder keyword : this.keywords) {
                     keywords.add(keyword.createKeyword(context));
@@ -92,7 +93,7 @@ public class EmojiBuilder {
         if (existingEmoji != null) {
             return castEmoji(existingEmoji, context);
         } else {
-            List<Keyword> keywords = Lists.newArrayList();
+            List<XmlElement> keywords = Lists.newArrayList();
             if (this.keywords != null && !this.keywords.isEmpty()) {
                 for (KeywordBuilder keyword : this.keywords) {
                     keywords.add(keyword.createKeyword(context));

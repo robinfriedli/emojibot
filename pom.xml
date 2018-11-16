@@ -46,7 +46,7 @@
     <dependency>
       <groupId>net.robinfriedli.JXP</groupId>
       <artifactId>JXP</artifactId>
-      <version>0.6</version>
+      <version>0.7</version>
     </dependency>
   </dependencies>
 

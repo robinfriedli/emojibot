@@ -17,7 +17,7 @@ import net.robinfriedli.stringlist.StringListImpl;
 
 /**
  * Transform given input
- * wraps words in WhatsApp formatting wrappers if randFormat is true
+ * wraps words in markdown formatting wrappers if randFormat is true
  * adds random emoji between words
  * replaces keywords with emojis if replace is true else adds emoji after word
  */
@@ -29,7 +29,6 @@ public class TextManipulationService {
     private final boolean replaceWordPart;
     private final List<Emoji> emojis;
     private final List<Keyword> keywords;
-    private final Guild guild;
 
     private static List<String> wrappersStart =
         ImmutableList.of("_", "**", "***", "__", "__*", "__**", "__***", "~~");
@@ -40,15 +39,13 @@ public class TextManipulationService {
                                    boolean randEmojis,
                                    boolean replaceB,
                                    boolean replaceWordPart,
-                                   List<Emoji> emojis,
-                                   Guild guild) {
+                                   List<Emoji> emojis) {
         this.randFormat = randFormat;
         this.randEmojis = randEmojis;
         this.replaceB = replaceB;
         this.replaceWordPart = replaceWordPart;
         this.emojis = emojis;
         this.keywords = Emoji.getAllKeywords(emojis);
-        this.guild = guild;
     }
 
 

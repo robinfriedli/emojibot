@@ -3,6 +3,7 @@ package api;
 import com.google.common.collect.Lists;
 import net.robinfriedli.jxp.api.AbstractXmlElement;
 import net.robinfriedli.jxp.persist.Context;
+import org.w3c.dom.Element;
 
 import java.util.HashMap;
 import java.util.List;
@@ -11,11 +12,11 @@ import java.util.Map;
 public class Keyword extends AbstractXmlElement {
 
     public Keyword(String keywordValue, boolean replace, Context context) {
-        this(keywordValue, replace, State.CONCEPTION, context);
+        super("keyword", buildAttributes(replace), keywordValue, context);
     }
 
-    public Keyword(String keywordValue, boolean replace, State state, Context context) {
-        super("keyword", buildAttributes(replace), keywordValue, state, context);
+    public Keyword(Element element, Context context) {
+        super(element, context);
     }
 
     private static Map<String, String> buildAttributes(boolean replace) {

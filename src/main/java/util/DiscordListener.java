@@ -57,7 +57,7 @@ public class DiscordListener extends ListenerAdapter {
             if (mode == Mode.PARTITIONED) {
                 List<Guild> guilds = jda.getGuilds();
                 for (Guild guild : guilds) {
-                    contextManager.createBoundContext(guild, new PersistenceManager());
+                    contextManager.createBoundContext(guild, guild.getId(), new PersistenceManager());
                 }
             }
             setMode(mode);
@@ -69,7 +69,8 @@ public class DiscordListener extends ListenerAdapter {
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         if (getMode() == Mode.PARTITIONED) {
-            contextManager.createBoundContext(event.getGuild(), new PersistenceManager());
+            Guild guild = event.getGuild();
+            contextManager.createBoundContext(guild, guild.getId(), new PersistenceManager());
         }
     }
 

@@ -98,14 +98,13 @@ public class CommandHandler {
         List<Emoji> emojis = context.getInstancesOf(Emoji.class);
 
         if (event != null) {
-            guild = event.getGuild();
             message = event.getMessage();
             if (!isWhisper) {
                 responseBuilder.append("**").append(message.getAuthor().getName()).append("**").append(System.lineSeparator());
             }
         }
 
-        TextManipulationService manipulationService = new TextManipulationService(randFormat, randEmojis, replaceB, replaceWordPart, emojis, guild);
+        TextManipulationService manipulationService = new TextManipulationService(randFormat, randEmojis, replaceB, replaceWordPart, emojis);
         responseBuilder.append(manipulationService.getOutput(text));
 
         if (isWhisper && message != null) {
@@ -162,7 +161,8 @@ public class CommandHandler {
 
             StringList keywordValues = StringListImpl
                 .create(command.substring(quotations.get(keywordsIndex) + 1, quotations.get(keywordsIndex + 1)), ",")
-                .applyForEach(String::trim);
+                .applyForEach(String::trim)
+                .applyForEach(String::toLowerCase);
 
             StringList replaceTags = StringListImpl
                 .createWords(command.substring(quotations.get(replaceTagsIndex) + 1, quotations.get(replaceTagsIndex + 1)))
@@ -189,7 +189,7 @@ public class CommandHandler {
                     keywords.add(new KeywordBuilder().setKeywordValue(keywordValue).setReplace(replace));
                 }
             } else {
-                throw new IllegalArgumentException("There has to be one replace flag for all emojis or one for each");
+                throw new IllegalArgumentException("There has to be one replace flag for all keywords or one for each");
             }
 
             instantiateEmojis(emojiValues, randomTags, keywords, commit, guild, channel);
@@ -480,7 +480,7 @@ public class CommandHandler {
             alertService.send("No configuration errors found.", channel);
         } else {
             if (!duplicateEmojis.isEmpty()) {
-                context.invoke(true, false, () -> {
+                context.invoke(true, true, () -> {
                     PersistenceManager persistenceManager = (PersistenceManager) context.getPersistenceManager();
                     persistenceManager.mergeDuplicateEmojis(duplicateEmojis);
                 }, channel);
@@ -493,7 +493,7 @@ public class CommandHandler {
             if (!duplicateKeywords.isEmpty()) {
                 // variables used in lambda must be final
                 Multimap<Emoji, Keyword> finalDuplicateKeywords = duplicateKeywords;
-                context.invoke(true, false, () -> {
+                context.invoke(true, true, () -> {
                     PersistenceManager persistenceManager = (PersistenceManager) context.getPersistenceManager();
                     persistenceManager.mergeDuplicateKeywords(finalDuplicateKeywords);
                 }, channel);
@@ -502,7 +502,7 @@ public class CommandHandler {
             if (!upperCaseKeywords.isEmpty()) {
                 // variables used in lambda must be final
                 Multimap<Emoji, Keyword> finalUpperCaseKeywords = upperCaseKeywords;
-                context.invoke(true, false, () -> {
+                context.invoke(true, true, () -> {
                     PersistenceManager persistenceManager = (PersistenceManager) context.getPersistenceManager();
                     persistenceManager.handleUpperCaseKeywords(finalUpperCaseKeywords);
                 }, channel);
