@@ -1,27 +1,31 @@
 package util;
 
-import api.DiscordEmoji;
-import api.Emoji;
-import api.Keyword;
-import com.google.common.collect.Lists;
-import core.PersistenceManager;
-import net.robinfriedli.jxp.persist.ContextManager;
-
 import java.util.List;
 import java.util.Scanner;
 
+import api.DiscordEmoji;
+import api.Emoji;
+import api.Keyword;
+import core.PersistenceManager;
+import net.robinfriedli.jxp.api.JxpBackend;
+import net.robinfriedli.jxp.api.JxpBuilder;
+import net.robinfriedli.jxp.persist.Context;
+
 public class Launcher {
 
-    private static ContextManager contextManager = new ContextManager(
-        "./resources/emojis.xml", new PersistenceManager(), Lists.newArrayList(new AlertEventListener(new AlertService())));
-    private static CommandHandler commandHandler = new CommandHandler(contextManager.getContext());
+    private static JxpBackend jxpBackend = new JxpBuilder()
+        .mapClass("emoji", Emoji.class)
+        .mapClass("discord-emoji", DiscordEmoji.class)
+        .mapClass("keyword", Keyword.class)
+        .addListeners(new AlertEventListener(new AlertService()))
+        .setPersistenceManager(new PersistenceManager())
+        .build();
+    private static Context context = jxpBackend.getContext("./resources/emojis.xml");
+
+    private static CommandHandler commandHandler = new CommandHandler(context);
 
     public static void main(String[] args) {
-        if (contextManager.getContext().getPersistenceManager().getXmlPersister().getDocument() != null) {
-            showMenu();
-        } else {
-            throw new IllegalStateException("Emoji loading failed");
-        }
+        showMenu();
     }
 
     private static void showMenu() {
@@ -69,7 +73,7 @@ public class Launcher {
 
     private static void launchDiscordBot() {
         commandHandler.cleanXml(null);
-        DiscordListener discordListener = new DiscordListener(contextManager, commandHandler);
+        DiscordListener discordListener = new DiscordListener(jxpBackend, context, commandHandler);
 
         System.out.println("Select Mode:");
         System.out.println("1 - SHARED (all guilds will share the same emojis, recommended if you want to share guild emotes)");
@@ -128,8 +132,8 @@ public class Launcher {
     }
 
     private static void listEmojis() {
-        List<Emoji> emojis = contextManager.getContext().getInstancesOf(Emoji.class, DiscordEmoji.class);
-        List<DiscordEmoji> discordEmojis = contextManager.getContext().getInstancesOf(DiscordEmoji.class);
+        List<Emoji> emojis = context.getInstancesOf(Emoji.class, DiscordEmoji.class);
+        List<DiscordEmoji> discordEmojis = context.getInstancesOf(DiscordEmoji.class);
         StringBuilder builder = new StringBuilder();
 
         for (Emoji emoji : emojis) {

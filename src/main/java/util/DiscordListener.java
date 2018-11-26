@@ -1,10 +1,13 @@
 package util;
 
+import java.util.List;
+
+import javax.security.auth.login.LoginException;
+
 import api.DiscordEmoji;
 import api.Emoji;
 import api.Keyword;
 import com.google.common.collect.Lists;
-import core.PersistenceManager;
 import core.TextLoadingService;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
@@ -16,11 +19,8 @@ import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.robinfriedli.jxp.api.JxpBackend;
 import net.robinfriedli.jxp.persist.Context;
-import net.robinfriedli.jxp.persist.ContextManager;
-
-import javax.security.auth.login.LoginException;
-import java.util.List;
 
 public class DiscordListener extends ListenerAdapter {
 
@@ -36,13 +36,16 @@ public class DiscordListener extends ListenerAdapter {
     public static final String COMMAND_COMMIT = "e!commit";
     public static final String COMMAND_REVERT = "e!revert";
 
-    private final ContextManager contextManager;
+    private final JxpBackend jxpBackend;
+    // base context to use if mode is not partitioned
+    private final Context baseContext;
     private final CommandHandler commandHandler;
     private Mode mode;
     private Guild guild;
 
-    public DiscordListener(ContextManager contextManager, CommandHandler commandHandler) {
-        this.contextManager = contextManager;
+    public DiscordListener(JxpBackend jxpBackend, Context baseContext, CommandHandler commandHandler) {
+        this.jxpBackend = jxpBackend;
+        this.baseContext = baseContext;
         this.commandHandler = commandHandler;
     }
 
@@ -57,7 +60,7 @@ public class DiscordListener extends ListenerAdapter {
             if (mode == Mode.PARTITIONED) {
                 List<Guild> guilds = jda.getGuilds();
                 for (Guild guild : guilds) {
-                    contextManager.createBoundContext(guild, guild.getId(), new PersistenceManager());
+                    jxpBackend.createBoundContext(guild, baseContext, guild.getId());
                 }
             }
             setMode(mode);
@@ -70,7 +73,7 @@ public class DiscordListener extends ListenerAdapter {
     public void onGuildJoin(GuildJoinEvent event) {
         if (getMode() == Mode.PARTITIONED) {
             Guild guild = event.getGuild();
-            contextManager.createBoundContext(guild, guild.getId(), new PersistenceManager());
+            jxpBackend.createBoundContext(guild, baseContext, guild.getId());
         }
     }
 
@@ -79,7 +82,7 @@ public class DiscordListener extends ListenerAdapter {
         if (event.getMessage().getContentDisplay().startsWith("e!") && !event.getAuthor().isBot()) {
             if (mode == Mode.PARTITIONED) {
                 guild = event.getGuild();
-                commandHandler.setContext(contextManager.getContext(guild));
+                commandHandler.setContext(jxpBackend.requireBoundContext(guild));
             }
             Message message = event.getMessage();
             String msg = message.getContentDisplay();
@@ -124,24 +127,12 @@ public class DiscordListener extends ListenerAdapter {
                 }
 
                 if (msg.equals(COMMAND_COMMIT)) {
-                    Context context;
-                    if (mode == Mode.PARTITIONED) {
-                        context = contextManager.getContext(guild);
-                    } else {
-                        context = contextManager.getContext();
-                    }
-
+                    Context context = getContext();
                     context.commitAll();
                 }
 
                 if (msg.equals(COMMAND_REVERT)) {
-                    Context context;
-                    if (mode == Mode.PARTITIONED) {
-                        context = contextManager.getContext(guild);
-                    } else {
-                        context = contextManager.getContext();
-                    }
-
+                    Context context = getContext();
                     context.revertAll();
                 }
             } catch (IllegalArgumentException | IllegalStateException | UnsupportedOperationException | AssertionError e) {
@@ -182,14 +173,9 @@ public class DiscordListener extends ListenerAdapter {
      */
     @SuppressWarnings("unchecked") // cast is safe since if the Element is not a DiscordEmoji it must be an Emoji
     private void listEmojis(MessageChannel channel) {
-        Context context;
-        if (getMode() == Mode.PARTITIONED) {
-            context = contextManager.getContext(guild);
-        } else {
-            context = contextManager.getContext();
-        }
+        Context context = getContext();
 
-        List<Emoji> emojis = (List<Emoji>) context.getInstancesOf(Emoji.class, DiscordEmoji.class);
+        List<Emoji> emojis = context.getInstancesOf(Emoji.class, DiscordEmoji.class);
         List<DiscordEmoji> discordEmojis = context.getInstancesOf(DiscordEmoji.class);
         //if the output exceeds 2000 characters separate into several messages
         List<String> outputParts = Lists.newArrayList();
@@ -244,6 +230,14 @@ public class DiscordListener extends ListenerAdapter {
             commandHandler.searchQuery(query, message.getChannel());
         } catch (StringIndexOutOfBoundsException e) {
             message.getChannel().sendMessage("Invalid input. See " + COMMAND_HELP).queue();
+        }
+    }
+
+    private Context getContext() {
+        if (mode == Mode.PARTITIONED) {
+            return jxpBackend.requireBoundContext(guild);
+        } else {
+            return baseContext;
         }
     }
 

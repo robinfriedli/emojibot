@@ -21,6 +21,10 @@ public class DiscordEmoji extends Emoji {
         super("discord-emoji", keywords, buildAttributes(value, random, name, guildId, guildName), context);
     }
 
+    public DiscordEmoji(Element element, Context context) {
+        super(element, context);
+    }
+
     public DiscordEmoji(Element element,
                         List<XmlElement> keywords,
                         Context context) {

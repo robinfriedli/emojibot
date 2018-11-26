@@ -8,6 +8,7 @@ import org.w3c.dom.Element;
 import util.DiscordListener;
 
 import javax.annotation.Nullable;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +27,10 @@ public class Emoji extends AbstractXmlElement {
 
     public Emoji(String tagName, List<XmlElement> keywords, Map<String, String> attributes, Context context) {
         super(tagName, attributes, keywords, context);
+    }
+
+    public Emoji(Element element, Context context) {
+        super(element, context);
     }
 
     public Emoji(Element element, List<XmlElement> keywords, Context context) {
@@ -111,7 +116,7 @@ public class Emoji extends AbstractXmlElement {
     }
 
     public void removeKeyword(Keyword keyword) {
-         removeSubElement(keyword);
+        removeSubElement(keyword);
     }
 
     public void removeKeywords(List<Keyword> keywords) {
