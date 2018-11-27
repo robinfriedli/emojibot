@@ -1,5 +1,6 @@
 package util;
 
+import java.io.File;
 import java.util.List;
 
 import javax.security.auth.login.LoginException;
@@ -60,7 +61,7 @@ public class DiscordListener extends ListenerAdapter {
             if (mode == Mode.PARTITIONED) {
                 List<Guild> guilds = jda.getGuilds();
                 for (Guild guild : guilds) {
-                    jxpBackend.createBoundContext(guild, baseContext, guild.getId());
+                    createContextForGuild(guild);
                 }
             }
             setMode(mode);
@@ -73,7 +74,7 @@ public class DiscordListener extends ListenerAdapter {
     public void onGuildJoin(GuildJoinEvent event) {
         if (getMode() == Mode.PARTITIONED) {
             Guild guild = event.getGuild();
-            jxpBackend.createBoundContext(guild, baseContext, guild.getId());
+            createContextForGuild(guild);
         }
     }
 
@@ -239,6 +240,21 @@ public class DiscordListener extends ListenerAdapter {
         } else {
             return baseContext;
         }
+    }
+
+    private void createContextForGuild(Guild guild) {
+        if (!jxpBackend.hasBoundContext(guild)) {
+            File file = new File(getPathForGuildContext(guild));
+            if (file.exists()) {
+                jxpBackend.createBoundContext(file, guild);
+            } else {
+                baseContext.copy(getPathForGuildContext(guild), guild);
+            }
+        }
+    }
+
+    private String getPathForGuildContext(Guild guild) {
+        return "./resources/" + guild.getId() + "emojis.xml";
     }
 
     private void setMode(Mode mode) {
